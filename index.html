@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mind Clock</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Kaisei+Tokumin&display=swap');
+
+    body {
+      width: 630px; /* 横幅を広げました */
+      margin: 0 auto;
+      text-align: center;
+      padding: 15px;
+      box-sizing: border-box;
+      background-color: #000;
+      color: #0f0;
+      font-family: 'Orbitron', sans-serif;
+    }
+    #timerDisplay {
+      font-size: 35px;
+      margin-bottom: 10px;
+    }
+    button {
+      font-size: 12px;
+      padding: 8px 15px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background-color: #111;
+      color: #0f0;
+      box-shadow: 3px 3px 6px #050, -3px -3px 6px #0a0;
+      transition: 0.2s;
+      cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+    }
+    button:hover {
+      background-color: #0f0;
+      color: #000;
+      font-family: 'Orbitron', sans-serif;
+    }
+    button:active {
+      box-shadow: 1px 1px 3px #050, -1px -1px 3px #0a0;
+      font-family: 'Orbitron', sans-serif;
+    }
+    textarea {
+      width: 100%;
+      font-size: 15px;
+      margin: 10px 0;
+      resize: none;
+      overflow: hidden;
+      background-color: #111;
+      color: #0f0;
+      border: none; /* 枠線を削除 */
+      outline: 0.1px solid #0f0; /* 枠線の存在感を控えめに */
+      font-family: 'Kaisei Tokumin', serif;
+    }
+    #message {
+      font-size: 14px;
+      color: #0f0;
+      margin-top: 10px;
+      display: none;
+      font-family: 'Orbitron', sans-serif;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-family: 'Orbitron', sans-serif;
+    }
+    #tweets {
+      text-align: left;
+      margin-top: 20px;
+      font-family: Kaisotai; /* https://moji-waku.com/kaiso/index.html */
+    }
+    .tweet {
+      font-size: 18px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #0f0;
+      padding-bottom: 10px;
+      font-family: Kaisotai; /* https://moji-waku.com/kaiso/index.html */
+    }
+  </style>
+</head>
+<body>
+  <h1>Mind Clock</h1>
+  <div id="timerDisplay">00:00:00</div>
+  <button onclick="startTimer()">Start / Resume</button>
+  <button onclick="stopTimer()">Stop</button>
+  <button onclick="resetTimer()">Reset</button>
+  <div id="message"></div>
+  <textarea id="tweetInput" placeholder="What's on your mind?" oninput="autoResize(this)"></textarea>
+  <button onclick="postTweet()">Tweet</button>
+  <button onclick="exportTweets()">Export Tweets</button>
+  <div id="tweets"></div>
+
+  <script>
+    const tweetArray = [];
+
+    document.getElementById('tweetInput').addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key == 'Enter') {
+        postTweet();
+      }
+    });
+
+    function postTweet() {
+      const tweetInput = document.getElementById('tweetInput');
+      const tweetText = tweetInput.value.trim();
+      if (tweetText) {
+        const timestamp = new Date().toLocaleString();
+        tweetArray.push(`${timestamp}: ${tweetText}`); // 配列にツイートを保存
+
+        const tweet = document.createElement('div');
+        tweet.className = 'tweet';
+        tweet.innerHTML = `${timestamp}: ${tweetText}`;
+        document.getElementById('tweets').prepend(tweet);
+        tweetInput.value = ''; // Clear the textarea
+      }
+    }
+
+    let timer;
+    let startTime;
+    let accumulatedTime = 0;
+    let running = false;
+
+    const coolMessages = [
+      "Data has been launched into the cosmos 🚀",
+      "Your words are now beyond infinity!",
+      "The Enter key can't believe this!",
+      "This moment has changed the world!",
+      "Magic of coding unleashed!",
+      "Information has transcended dimensions!",
+      "This copy is rare indeed!",
+      "Invincible paste ready!",
+      "Text is transcending dimensions!",
+      "Data races through the network!",
+      "This copy will go down in history!",
+      "Your message shines brightly!",
+      "Copy complete, grand departure!",
+      "Astonishing coding power!",
+      "First step into uncharted territory!",
+      "Thought has been materialized!",
+      "Data races through time and space!",
+      "Information moving at light speed!",
+      "Everyone praises this copy!",
+      "Legendary copy complete!",
+      "Your input is now reaching the future!",
+      "Inspiration is unstoppable!",
+      "Infinite possibilities take flight!",
+      "The best copy, surprising the world!",
+      "Imagination has been digitized!",
+      "The future awaits you!",
+      "This text is art at heart!",
+      "Information moving like lightning!",
+      "Message has soared into the universe!",
+      "Input complete, infinite possibilities ahead!"
+    ];
+
+    function autoResize(elem) {
+      elem.style.height = 'auto';
+      elem.style.height = elem.scrollHeight + 'px';
+    }
+
+    function updateTimerDisplay() {
+      const elapsed = Math.floor((Date.now() - startTime + accumulatedTime) / 1000);
+      const hours = Math.floor(elapsed / 3600);
+      const minutes = Math.floor((elapsed % 3600) / 60);
+      const seconds = elapsed % 60;
+      document.getElementById('timerDisplay').textContent =
+          `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    async function copyToClipboard() {
+      const taskInput = document.getElementById('taskInput').value;
+      if (taskInput.trim() !== '') {
+        try {
+          await navigator.clipboard.writeText(taskInput);
+          const message = coolMessages[Math.floor(Math.random() * coolMessages.length)];
+          showMessage(message);
+        } catch (err) {
+          console.error('Failed to copy to clipboard:', err);
+        }
+      }
+    }
+
+    function showMessage(text) {
+      const messageDiv = document.getElementById('message');
+      messageDiv.textContent = text;
+      messageDiv.style.display = 'block';
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 3000);
+    }
+
+    function startTimer() {
+      if (!running) {
+        running = true;
+        startTime = Date.now();
+        timer = setInterval(updateTimerDisplay, 1000);
+      }
+    }
+
+    async function stopTimer() {
+      if (running) {
+        running = false;
+        clearInterval(timer);
+        accumulatedTime += Date.now() - startTime;
+        await copyToClipboard();
+      }
+    }
+
+    async function resetTimer() {
+      running = false;
+      clearInterval(timer);
+      accumulatedTime = 0;
+      document.getElementById('timerDisplay').textContent = "00:00:00";
+      await copyToClipboard();
+    }
+
+    async function exportTweets() {
+      if (tweetArray.length > 0) {
+        const orderedTweets = tweetArray.slice().join('\n');
+        try {
+          await navigator.clipboard.writeText(orderedTweets);
+          alert('Tweets copied to clipboard!');
+        } catch (err) {
+          console.error('Failed to copy tweets:', err);
+        }
+      } else {
+        alert('No tweets to export!');
+      }
+    }
+  </script>
+</body>
+</html>
