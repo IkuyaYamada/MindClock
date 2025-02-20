@@ -1,5 +1,5 @@
 # イメージ
-![image](/image/capture.png)
+![image](/img/capture.png)
 
 # todo
 - [] dateは不要でtimestampだけでよさそうである
