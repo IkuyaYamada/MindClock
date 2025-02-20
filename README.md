@@ -1,0 +1,2 @@
+# MindClock
+ローカルでうごくtweeterらしきもの
