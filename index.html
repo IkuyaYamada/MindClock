@@ -10,18 +10,65 @@
 
 
     body {
-      width: 630px; /* 横幅を広げました */
+      width: 630px;
       margin: 0 auto;
-      text-align: center;
+      text-align: left;
       padding: 15px;
       box-sizing: border-box;
       background-color: #000;
       color: #0f0;
       font-family: 'Orbitron', sans-serif;
+      -webkit-app-region: drag;
     }
     #timerDisplay {
       font-size: 35px;
       margin-bottom: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+    #timerDisplay:hover {
+      color: #0f0;
+      text-shadow: 0 0 10px #0f0;
+    }
+    #timerDisplay.running {
+      color: #0f0;
+      text-shadow: 0 0 10px #0f0;
+    }
+    .timer-controls {
+      display: flex;
+      gap: 10px;
+    }
+    .timer-button {
+      background: none;
+      border: 2px solid #0f0;
+      color: #0f0;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      padding: 0;
+      opacity: 0.7;
+    }
+    .timer-button:hover {
+      opacity: 1;
+      background: #0f01;
+      box-shadow: 0 0 10px #0f0;
+    }
+    .timer-button.active {
+      opacity: 1;
+      background: #0f01;
+      box-shadow: 0 0 10px #0f0;
     }
     button {
       font-size: 12px;
@@ -35,6 +82,7 @@
       transition: 0.2s;
       cursor: pointer;
       font-family: 'Orbitron', sans-serif;
+      -webkit-app-region: no-drag;
     }
     button:hover {
       background-color: #0f0;
@@ -51,11 +99,50 @@
       margin: 10px 0;
       resize: none;
       overflow: hidden;
-      background-color: #111;
+      background-color: #0a0a0a;
       color: #0f0;
-      border: none; /* 枠線を削除 */
-      outline: 0.1px solid #0f0; /* 枠線の存在感を控えめに */
+      border: none;
+      outline: none;
+      padding: 15px;
       font-family: 'Kaisei Tokumin', serif;
+      border-radius: 3px;
+      box-shadow: 0 0 10px #0f03, inset 0 0 15px #0002;
+      position: relative;
+      transition: all 0.3s ease;
+      height: 80px;
+      box-sizing: border-box;
+      -webkit-app-region: no-drag;
+    }
+    textarea:focus {
+      box-shadow: 0 0 20px #0f04, inset 0 0 20px #0f02;
+      background-color: #0c0c0c;
+    }
+    textarea::placeholder {
+      color: #0f0;
+      opacity: 0.3;
+      text-shadow: 0 0 5px #0f0;
+    }
+    .input-container {
+      position: relative;
+      margin: 20px 0;
+    }
+    .input-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #0f0, transparent);
+    }
+    .input-container::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #0f0, transparent);
     }
     #message {
       font-size: 14px;
@@ -67,55 +154,537 @@
     h1 {
       margin-bottom: 20px;
       font-family: 'Orbitron', sans-serif;
+      text-align: center;
     }
     #tweets {
       text-align: left;
       margin-top: 20px;
-      font-family: 'Yusei Magic', serif; /* https://moji-waku.com/kaiso/index.html */
+      font-family: 'Yusei Magic', serif;
     }
     .tweet {
       font-size: 18px;
       margin-bottom: 10px;
       border-bottom: 1px solid #0f0;
-      padding-bottom: 10px;
-      font-family:  'Yusei Magic'; /* https://moji-waku.com/kaiso/index.html */
+      padding: 10px;
+      font-family: 'Yusei Magic';
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      outline: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border-radius: 3px;
+      -webkit-app-region: no-drag;
+    }
+    .tweet:focus {
+      background: rgba(0, 255, 0, 0.05);
+      box-shadow: 0 0 10px #0f03;
+      padding-left: 15px;
+    }
+    .tweet:hover {
+      background: rgba(0, 255, 0, 0.02);
+    }
+    .tweet .content {
+      flex-grow: 1;
+      margin-right: 15px;
+      white-space: pre-wrap;
+    }
+    .tweet span.time {
+      font-size: 12px;
+      color: #0f0;
+      opacity: 0.5;
+      font-family: 'Orbitron', sans-serif;
+      margin-right: 10px;
+      transition: opacity 0.3s ease;
+    }
+    .tweet:hover span.time {
+      opacity: 1;
+    }
+    .controls-info {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      display: none;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      font-family: 'Orbitron', sans-serif;
+      opacity: 0.4;
+      transition: opacity 0.3s ease;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px;
+      border: 1px solid #0f03;
+      border-radius: 5px;
+      backdrop-filter: blur(3px);
+      -webkit-app-region: no-drag;
+    }
+    .controls-info:hover {
+      opacity: 1;
+    }
+    .shortcut-group {
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .key {
+      background: #0f01;
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px solid #0f02;
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+    }
+    .key-separator {
+      opacity: 0.5;
+    }
+    .flush-btn {
+      position: absolute;
+      right: 15px;
+      bottom: 15px;
+      background-color: #111;
+      color: #f00;
+      border: none;
+      padding: 4px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+      box-shadow: 2px 2px 4px #500, -2px -2px 4px #500;
+      transition: all 0.2s ease;
+      border-radius: 3px;
+      letter-spacing: 1px;
+      opacity: 0.4;
+      -webkit-app-region: no-drag;
+    }
+    .flush-btn:hover {
+      opacity: 1;
+      background-color: #200;
+      color: #f00;
+      box-shadow: 3px 3px 6px #500, -3px -3px 6px #500;
+      text-shadow: 0 0 5px #f00;
+    }
+    .flush-btn:active {
+      box-shadow: 1px 1px 2px #500, -1px -1px 2px #500;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      -webkit-app-region: no-drag;
+    }
+    .modal-content {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #111;
+      padding: 20px;
+      border-radius: 5px;
+      border: 1px solid #0f0;
+      box-shadow: 0 0 20px #0f04;
+      z-index: 1001;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .modal-message {
+      color: #0f0;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .modal-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .modal-btn {
+      padding: 5px 15px;
+      border: 1px solid #0f0;
+      background: #111;
+      color: #0f0;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+    }
+    .modal-btn:hover {
+      background: #0f0;
+      color: #000;
+    }
+    .modal-btn.cancel {
+      border-color: #f00;
+      color: #f00;
+    }
+    .modal-btn.cancel:hover {
+      background: #f00;
+      color: #000;
+    }
+    @keyframes matrix-rain {
+      0% {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+    }
+    .tweet.matrix-effect::before {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #0f0 0%, transparent 100%);
+      animation: matrix-rain 1s linear;
+      pointer-events: none;
+    }
+    .tweet.editing .content {
+      background: rgba(0, 255, 0, 0.05);
+      padding: 5px;
+      border-radius: 3px;
+      outline: none;
+      border-bottom: 2px solid #0f0;
+      transition: all 0.2s ease;
+    }
+    .tweet.editing .content:focus {
+      background: rgba(0, 255, 0, 0.08);
+      border-bottom: 2px solid #0f0;
+      box-shadow: 0 4px 8px rgba(0, 255, 0, 0.1);
+    }
+    .tweet.new-tweet {
+      border: 1px solid #0f03;
+      margin-bottom: 20px;
+      background: rgba(0, 255, 0, 0.02);
+    }
+    .tweet.new-tweet.editing {
+      background: rgba(0, 255, 0, 0.05);
+    }
+    .tweet.new-tweet .content {
+      color: #0f07;
+    }
+    .tweet.new-tweet.editing .content {
+      color: #0f0;
     }
   </style>
 </head>
 <body>
+  <div class="controls-info">
+    <div class="shortcut-group">
+      <span class="key">⌘</span>
+      <span class="key-separator">+</span>
+      <span class="key">S</span>
+      <span>タイマーの開始/停止</span>
+    </div>
+    <div class="shortcut-group">
+      <span class="key">⌘</span>
+      <span class="key-separator">+</span>
+      <span class="key">Shift</span>
+      <span class="key-separator">+</span>
+      <span class="key">S</span>
+      <span>タイマーのリセット</span>
+    </div>
+    <div class="shortcut-group">
+      <span class="key">⌘</span>
+      <span class="key-separator">+</span>
+      <span class="key">N</span>
+      <span>新規ツイート入力</span>
+    </div>
+    <div class="shortcut-group">
+      <span class="key">i</span>
+      <span>選択中のツイートを編集</span>
+    </div>
+    <div class="shortcut-group">
+      <span class="key">⌘</span>
+      <span class="key-separator">+</span>
+      <span class="key">Enter</span>
+      <span>ツイートの投稿/保存</span>
+    </div>
+    <div class="shortcut-group">
+      <span class="key">j</span>
+      <span class="key-separator">/</span>
+      <span class="key">k</span>
+      <span>ツイート間の移動</span>
+    </div>
+    <div class="shortcut-group">
+      <span class="key">⌘</span>
+      <span class="key-separator">+</span>
+      <span class="key">Shift</span>
+      <span class="key-separator">+</span>
+      <span class="key">E</span>
+      <span>ツイートのエクスポート</span>
+    </div>
+    <div class="shortcut-group">
+      <span class="key">⌘/Ctrl</span>
+      <span class="key-separator">+</span>
+      <span class="key">D</span>
+      <span>選択中のツイートを削除</span>
+    </div>
+    <div class="shortcut-group">
+      <span class="key">⌘/Ctrl</span>
+      <span class="key-separator">+</span>
+      <span class="key">Shift</span>
+      <span class="key-separator">+</span>
+      <span class="key">D</span>
+      <span>全てのツイートを削除</span>
+    </div>
+  </div>
   <h1>Mind Clock</h1>
-  <div id="timerDisplay">00:00:00</div>
-  <button onclick="startTimer()">Start / Resume</button>
-  <button onclick="stopTimer()">Stop</button>
-  <button onclick="resetTimer()">Reset</button>
+  <div id="timerDisplay">
+    <span class="time">Click to Start</span>
+    <div class="timer-controls">
+      <button class="timer-button play-pause" onclick="toggleTimer()">▶</button>
+      <button class="timer-button reset" onclick="resetTimer()">↺</button>
+    </div>
+  </div>
   <div id="message"></div>
-  <textarea id="tweetInput" placeholder="What's on your mind?" oninput="autoResize(this)"></textarea>
-  <button onclick="postTweet()">Tweet</button>
-  <button onclick="exportTweets()">Export Tweets</button>
+  <div class="input-container">
+    <div class="tweet new-tweet" tabindex="0">
+      <span class="content" contenteditable="false">Initialize thought sequence...</span>
+    </div>
+  </div>
   <div id="tweets"></div>
+  <button class="flush-btn" onclick="flushTweets()">FLUSH ALL</button>
+
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-message">全てのツイートを削除しますか？</div>
+      <div class="modal-buttons">
+        <button class="modal-btn" onclick="confirmFlush()">OK</button>
+        <button class="modal-btn cancel" onclick="cancelFlush()">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    const tweetArray = [];
+    const { ipcRenderer } = require('electron');
+    let tweetArray = [];
 
-    document.getElementById('tweetInput').addEventListener('keydown', function(e) {
-      if ((e.ctrlKey || e.metaKey) && e.key == 'Enter') {
-        postTweet();
+    // 起動時にツイートを読み込む
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        tweetArray = await ipcRenderer.invoke('load-tweets');
+        // 保存されていたツイートを表示
+        const tweetsContainer = document.getElementById('tweets');
+        tweetArray.forEach((tweet, index) => {
+          const tweetElement = document.createElement('div');
+          tweetElement.className = 'tweet';
+          tweetElement.setAttribute('data-text', tweet.content);
+          tweetElement.setAttribute('data-index', tweetArray.length - 1 - index); // 表示順序の逆順を考慮
+          tweetElement.setAttribute('tabindex', '0');
+          tweetElement.innerHTML = `
+            <span class="content">${tweet.content}</span>
+            <span class="time">${formatTime(tweet.timestamp)}</span>
+          `;
+          tweetsContainer.prepend(tweetElement);
+        });
+      } catch (error) {
+        console.error('Failed to load tweets:', error);
       }
     });
 
-    function postTweet() {
-      const tweetInput = document.getElementById('tweetInput');
-      const tweetText = tweetInput.value.trim();
-      if (tweetText) {
-        const timestamp = new Date().toLocaleString();
-        tweetArray.push(`${timestamp}: ${tweetText}`); // 配列にツイートを保存
-
-        const tweet = document.createElement('div');
-        tweet.className = 'tweet';
-        tweet.innerHTML = `${timestamp}: ${tweetText}`;
-        document.getElementById('tweets').prepend(tweet);
-        tweetInput.value = ''; // Clear the textarea
+    document.addEventListener('keydown', function(e) {
+      // モーダル表示中は他のキー操作を無効化
+      if (document.querySelector('.modal-overlay').style.display === 'block') {
+        return;
       }
+
+      // 編集モード中はj,kキーの移動を無効化
+      const isEditing = document.querySelector('.tweet.editing') !== null;
+      if (isEditing && (e.key === 'j' || e.key === 'k')) {
+        return;
+      }
+
+      // タイマーの開始/停止 (⌘/Ctrl + S)
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault(); // デフォルトの保存動作を防ぐ
+        toggleTimer();
+        return;
+      }
+
+      // タイマーのリセット (⌘/Ctrl + Shift + S)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        resetTimer();
+        return;
+      }
+
+      // 新規ツイート入力 (⌘/Ctrl + N)
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        const newTweet = document.querySelector('.tweet.new-tweet');
+        if (newTweet) {
+          newTweet.focus();
+          enterNewTweetEditMode(newTweet);
+        }
+        return;
+      }
+
+      // iキーでツイートを編集
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        const focusedTweet = document.activeElement;
+        if (focusedTweet && focusedTweet.classList.contains('tweet')) {
+          if (focusedTweet.classList.contains('new-tweet')) {
+            enterNewTweetEditMode(focusedTweet);
+          } else {
+            const index = parseInt(focusedTweet.getAttribute('data-index'));
+            editTweet(index);
+          }
+        }
+        return;
+      }
+
+      // j,kキーでの移動
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && (e.key === 'j' || e.key === 'k')) {
+        e.preventDefault();
+        const tweets = Array.from(document.querySelectorAll('.tweet'));
+        const currentFocus = document.activeElement;
+        let currentIndex = tweets.indexOf(currentFocus);
+
+        // 現在のフォーカスがツイート上にない場合は、最初/最後のツイートにフォーカス
+        if (currentIndex === -1) {
+          if (e.key === 'j') {
+            tweets[0]?.focus();
+          } else {
+            tweets[tweets.length - 1]?.focus();
+          }
+          return;
+        }
+
+        // j: 下へ移動, k: 上へ移動
+        if (e.key === 'j') {
+          currentIndex = Math.min(currentIndex + 1, tweets.length - 1);
+        } else {
+          currentIndex = Math.max(currentIndex - 1, 0);
+        }
+        tweets[currentIndex]?.focus();
+        return;
+      }
+
+      // ショートカット一覧の表示/非表示 (⌘/Ctrl + ?)
+      if ((e.ctrlKey || e.metaKey) && (e.key === '?' || e.key === '/')) {
+        e.preventDefault();
+        const controls = document.querySelector('.controls-info');
+        controls.style.display = controls.style.display === 'none' || controls.style.display === '' ? 'flex' : 'none';
+      }
+
+      // リセット (Esc)
+      if (e.key === 'Escape') {
+        resetTimer();
+      }
+
+      // ツイートのエクスポート (⌘/Ctrl + Shift + E)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        exportTweets();
+        return;
+      }
+
+      // 全ツイート削除 (⌘/Ctrl + Shift + D)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        flushTweets();
+        return;
+      }
+
+      // 選択されたツイートの削除 (⌘/Ctrl + D)
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        const focusedTweet = document.activeElement;
+        if (focusedTweet && focusedTweet.classList.contains('tweet')) {
+          deleteTweet(parseInt(focusedTweet.getAttribute('data-index')));
+        }
+      }
+    });
+
+    const tweetEffects = [
+      {
+        name: 'matrix-effect',
+        duration: 1000
+      }
+    ];
+
+    async function postTweet(content) {
+      if (content) {
+        const newTweet = {
+          content: content.replace(/\n/g, '<br>'),
+          timestamp: new Date().toISOString()
+        };
+
+        try {
+          // まず永続化を試みる
+          tweetArray.push(newTweet);
+          await ipcRenderer.invoke('save-tweets', tweetArray);
+
+          // 永続化成功後にUIを更新
+          const tweet = document.createElement('div');
+          tweet.className = 'tweet';
+          tweet.setAttribute('data-text', newTweet.content);
+          tweet.setAttribute('data-index', '0'); // 新しいツイートは常にインデックス0
+          tweet.setAttribute('tabindex', '0');
+          tweet.innerHTML = `
+            <span class="content">${newTweet.content}</span>
+            <span class="time">${formatTime(newTweet.timestamp)}</span>
+          `;
+          document.getElementById('tweets').prepend(tweet);
+
+          // 既存のツイートのインデックスを更新
+          const existingTweets = document.querySelectorAll('.tweet:not(:first-child):not(.new-tweet)');
+          existingTweets.forEach(existingTweet => {
+            const oldIndex = parseInt(existingTweet.getAttribute('data-index'));
+            existingTweet.setAttribute('data-index', oldIndex + 1);
+          });
+
+          // マトリックスエフェクトを適用
+          tweet.classList.add('matrix-effect');
+          setTimeout(() => {
+            tweet.classList.remove('matrix-effect');
+          }, 1000);
+
+          return true;
+        } catch (error) {
+          console.error('Failed to save tweet:', error);
+          // エラーが発生した場合、配列から削除して元に戻す
+          tweetArray.pop();
+          throw error;
+        }
+      }
+      return false;
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMinutes = Math.floor((now - date) / (1000 * 60));
+      
+      if (diffMinutes < 1) return 'NOW';
+      if (diffMinutes < 60) return `${diffMinutes}M AGO`;
+      
+      const diffHours = Math.floor(diffMinutes / 60);
+      if (diffHours < 24) return `${diffHours}H AGO`;
+      
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays < 7) return `${diffDays}D AGO`;
+      
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).toUpperCase();
     }
 
     let timer;
@@ -157,29 +726,48 @@
     ];
 
     function autoResize(elem) {
+      const minHeight = 80; // 最小の高さも80pxに
+      
+      // スクロールの高さを正確に計測するための一時的な高さリセット
       elem.style.height = 'auto';
-      elem.style.height = elem.scrollHeight + 'px';
+      
+      // 実際のコンテンツの高さを取得（最小値は保持）
+      const newHeight = Math.max(elem.scrollHeight, minHeight);
+      
+      // 現在の高さと新しい高さが異なる場合のみ更新
+      if (elem.clientHeight !== newHeight) {
+        elem.style.height = newHeight + 'px';
+      }
     }
 
+    // DOMContentLoadedイベントでテキストエリアの初期設定
+    window.addEventListener('DOMContentLoaded', () => {
+      const textarea = document.getElementById('tweetInput');
+      textarea.style.height = '80px';
+      // 初期表示時にもautoResizeを実行
+      autoResize(textarea);
+    });
+
     function updateTimerDisplay() {
+      if (!running && accumulatedTime === 0) {
+        document.querySelector('#timerDisplay .time').textContent = "Click to Start";
+        return;
+      }
       const elapsed = Math.floor((Date.now() - startTime + accumulatedTime) / 1000);
       const hours = Math.floor(elapsed / 3600);
       const minutes = Math.floor((elapsed % 3600) / 60);
       const seconds = elapsed % 60;
-      document.getElementById('timerDisplay').textContent =
+      document.querySelector('#timerDisplay .time').textContent =
           `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
     async function copyToClipboard() {
-      const taskInput = document.getElementById('taskInput').value;
-      if (taskInput.trim() !== '') {
-        try {
-          await navigator.clipboard.writeText(taskInput);
-          const message = coolMessages[Math.floor(Math.random() * coolMessages.length)];
-          showMessage(message);
-        } catch (err) {
-          console.error('Failed to copy to clipboard:', err);
-        }
+      try {
+        await navigator.clipboard.writeText(taskInput);
+        const message = coolMessages[Math.floor(Math.random() * coolMessages.length)];
+        showMessage(message);
+      } catch (err) {
+        console.error('Failed to copy to clipboard:', err);
       }
     }
 
@@ -192,34 +780,65 @@
       }, 3000);
     }
 
+    function toggleTimer() {
+      if (running) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    }
+
     function startTimer() {
       if (!running) {
         running = true;
         startTime = Date.now();
         timer = setInterval(updateTimerDisplay, 1000);
+        updateTimerDisplay();
+        document.getElementById('timerDisplay').classList.add('running');
+        document.querySelector('.timer-button.play-pause').textContent = '⏸';
       }
     }
 
-    async function stopTimer() {
+    function stopTimer() {
       if (running) {
         running = false;
         clearInterval(timer);
         accumulatedTime += Date.now() - startTime;
-        await copyToClipboard();
+        document.getElementById('timerDisplay').classList.remove('running');
+        document.querySelector('.timer-button.play-pause').textContent = '▶';
       }
     }
 
-    async function resetTimer() {
+    function resetTimer() {
       running = false;
       clearInterval(timer);
       accumulatedTime = 0;
-      document.getElementById('timerDisplay').textContent = "00:00:00";
-      await copyToClipboard();
+      document.querySelector('#timerDisplay .time').textContent = "Click to Start";
+      document.getElementById('timerDisplay').classList.remove('running');
+      document.querySelector('.timer-button.play-pause').textContent = '▶';
     }
+
+    // タイマーディスプレイのクリックイベントを追加
+    document.querySelector('#timerDisplay .time').addEventListener('click', function(e) {
+      toggleTimer();
+    });
 
     async function exportTweets() {
       if (tweetArray.length > 0) {
-        const orderedTweets = tweetArray.slice().join('\n');
+        const orderedTweets = tweetArray.map(tweet => {
+          const date = new Date(tweet.timestamp);
+          const formattedDate = date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+          return `[${formattedDate}] ${tweet.content}`;
+        }).join('\n');
+        
         try {
           await navigator.clipboard.writeText(orderedTweets);
           alert('Tweets copied to clipboard!');
@@ -229,6 +848,268 @@
       } else {
         alert('No tweets to export!');
       }
+    }
+
+    async function deleteTweet(index) {
+      const focusedTweet = document.activeElement;
+      if (!focusedTweet || !focusedTweet.classList.contains('tweet')) return;
+      
+      // 現在のインデックスを取得（表示順序の逆順を考慮）
+      const currentIndex = tweetArray.length - 1 - parseInt(focusedTweet.getAttribute('data-index'));
+      
+      if (!focusedTweet.classList.contains('confirm')) {
+        // 最初の確認時
+        focusedTweet.classList.add('confirm');
+        focusedTweet.style.background = 'rgba(255, 0, 0, 0.1)';
+        
+        // キーボードイベントリスナーを追加
+        const handleDeleteKeypress = async (e) => {
+          if (e.key === 'Enter') {
+            // Enterキーで削除実行
+            document.removeEventListener('keydown', handleDeleteKeypress);
+            await executeDelete(currentIndex);
+          } else if (e.key === 'Escape') {
+            // Escキーでキャンセル
+            document.removeEventListener('keydown', handleDeleteKeypress);
+            focusedTweet.classList.remove('confirm');
+            focusedTweet.style.background = '';
+          }
+        };
+        
+        document.addEventListener('keydown', handleDeleteKeypress);
+        
+        // 他のツイートがフォーカスされた時のイベントリスナー
+        const handleOtherFocus = (e) => {
+          if (e.target.classList.contains('tweet') && e.target !== focusedTweet) {
+            document.removeEventListener('keydown', handleDeleteKeypress);
+            document.removeEventListener('focusin', handleOtherFocus);
+            focusedTweet.classList.remove('confirm');
+            focusedTweet.style.background = '';
+          }
+        };
+        
+        document.addEventListener('focusin', handleOtherFocus);
+        
+        return;
+      }
+    }
+
+    async function executeDelete(index) {
+      try {
+        tweetArray = await ipcRenderer.invoke('delete-tweet', index);
+        // ツイート一覧を再描画
+        const tweetsContainer = document.getElementById('tweets');
+        tweetsContainer.innerHTML = '';
+        tweetArray.forEach((tweet, idx) => {
+          const tweetElement = document.createElement('div');
+          tweetElement.className = 'tweet';
+          tweetElement.setAttribute('data-text', tweet.content);
+          tweetElement.setAttribute('data-index', tweetArray.length - 1 - idx); // 表示順序の逆順を考慮
+          tweetElement.setAttribute('tabindex', '0');
+          tweetElement.innerHTML = `
+            <span class="content">${tweet.content}</span>
+            <span class="time">${formatTime(tweet.timestamp)}</span>
+          `;
+          tweetsContainer.prepend(tweetElement);
+        });
+      } catch (error) {
+        console.error('Failed to delete tweet:', error);
+      }
+    }
+
+    async function flushTweets() {
+      showModal();
+    }
+
+    function showModal() {
+      document.querySelector('.modal-overlay').style.display = 'block';
+      // モーダル表示時のキーボードイベントリスナーを追加
+      document.addEventListener('keydown', handleModalKeypress);
+    }
+
+    function hideModal() {
+      document.querySelector('.modal-overlay').style.display = 'none';
+      // モーダル非表示時のキーボードイベントリスナーを削除
+      document.removeEventListener('keydown', handleModalKeypress);
+    }
+
+    function handleModalKeypress(e) {
+      if (e.key === 'Enter') {
+        confirmFlush();
+      } else if (e.key === 'Escape') {
+        cancelFlush();
+      }
+    }
+
+    async function confirmFlush() {
+      hideModal();
+      try {
+        tweetArray = await ipcRenderer.invoke('flush-tweets');
+        document.getElementById('tweets').innerHTML = '';
+      } catch (error) {
+        console.error('Failed to flush tweets:', error);
+      }
+    }
+
+    function cancelFlush() {
+      hideModal();
+    }
+
+    async function editTweet(index) {
+      const focusedTweet = document.activeElement;
+      if (!focusedTweet || !focusedTweet.classList.contains('tweet')) return;
+      
+      const contentSpan = focusedTweet.querySelector('.content');
+      const originalContent = contentSpan.innerHTML.replace(/<br>/g, '\n');
+      let isComposing = false;
+      
+      // 編集モードに入る
+      focusedTweet.classList.add('editing');
+      contentSpan.contentEditable = true;
+      contentSpan.textContent = originalContent;
+      contentSpan.focus();
+
+      // IME入力開始イベントのリスナー
+      const handleCompositionStart = () => {
+        isComposing = true;
+      };
+
+      // IME入力終了イベントのリスナー
+      const handleCompositionEnd = () => {
+        isComposing = false;
+      };
+      
+      // 編集完了のイベントリスナー
+      const handleEditKeypress = async (e) => {
+        // cmd + enterで保存
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !isComposing) {
+          e.preventDefault();
+          e.stopPropagation();
+          const newContent = contentSpan.textContent.trim();
+          
+          if (newContent !== originalContent) {
+            // 現在のインデックスを取得（表示順序の逆順を考慮）
+            const currentIndex = tweetArray.length - 1 - index;
+            
+            // ツイートの内容を更新
+            tweetArray[currentIndex].content = newContent.replace(/\n/g, '<br>');
+            
+            // 保存
+            try {
+              await ipcRenderer.invoke('save-tweets', tweetArray);
+              // 表示を更新
+              focusedTweet.setAttribute('data-text', newContent);
+              contentSpan.innerHTML = newContent.replace(/\n/g, '<br>');
+              contentSpan.contentEditable = false;
+              focusedTweet.classList.remove('editing');
+              focusedTweet.focus();
+            } catch (error) {
+              console.error('Failed to save edited tweet:', error);
+              // エラー時は元の内容に戻す
+              contentSpan.innerHTML = originalContent;
+              finishEditing();
+            }
+          } else {
+            finishEditing();
+          }
+        } else if (e.key === 'Escape') {
+          // 編集をキャンセル
+          e.preventDefault();
+          e.stopPropagation();
+          contentSpan.innerHTML = originalContent;
+          finishEditing();
+        }
+      };
+
+      // 編集モード終了時の共通処理
+      const finishEditing = () => {
+        contentSpan.contentEditable = false;
+        focusedTweet.classList.remove('editing');
+        focusedTweet.focus();
+        document.removeEventListener('keydown', handleEditKeypress);
+        contentSpan.removeEventListener('compositionstart', handleCompositionStart);
+        contentSpan.removeEventListener('compositionend', handleCompositionEnd);
+      };
+      
+      // イベントリスナーを追加
+      document.addEventListener('keydown', handleEditKeypress);
+      contentSpan.addEventListener('compositionstart', handleCompositionStart);
+      contentSpan.addEventListener('compositionend', handleCompositionEnd);
+    }
+
+    // 新規ツイート入力モードに入る処理
+    function enterNewTweetEditMode(tweetElement) {
+      const contentSpan = tweetElement.querySelector('.content');
+      let isComposing = false;
+
+      // プレースホルダーテキストをクリア
+      if (contentSpan.textContent === 'Initialize thought sequence...') {
+        contentSpan.textContent = '';
+      }
+
+      // 編集モードに入る
+      tweetElement.classList.add('editing');
+      contentSpan.contentEditable = true;
+      contentSpan.focus();
+
+      // IME入力開始イベントのリスナー
+      const handleCompositionStart = () => {
+        isComposing = true;
+      };
+
+      // IME入力終了イベントのリスナー
+      const handleCompositionEnd = () => {
+        isComposing = false;
+      };
+
+      // 編集完了のイベントリスナー
+      const handleEditKeypress = async (e) => {
+        // cmd + enterで投稿
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !isComposing) {
+          e.preventDefault();
+          e.stopPropagation();
+          const newContent = contentSpan.textContent.trim();
+
+          if (newContent) {
+            try {
+              // ツイートを投稿
+              await postTweet(newContent);
+              // 入力欄をリセット
+              contentSpan.textContent = '';
+              contentSpan.focus();
+            } catch (error) {
+              console.error('Failed to post tweet:', error);
+              showMessage('ツイートの投稿に失敗しました');
+            }
+          } else {
+            finishNewTweetEditing();
+          }
+        } else if (e.key === 'Escape') {
+          // 編集をキャンセル
+          e.preventDefault();
+          e.stopPropagation();
+          contentSpan.textContent = 'Initialize thought sequence...';
+          finishNewTweetEditing();
+        } else if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
+          // 通常のEnterキーは改行として処理
+          e.stopPropagation();
+        }
+      };
+
+      // 編集モード終了時の共通処理
+      const finishNewTweetEditing = () => {
+        contentSpan.contentEditable = false;
+        tweetElement.classList.remove('editing');
+        tweetElement.focus();
+        document.removeEventListener('keydown', handleEditKeypress);
+        contentSpan.removeEventListener('compositionstart', handleCompositionStart);
+        contentSpan.removeEventListener('compositionend', handleCompositionEnd);
+      };
+
+      // イベントリスナーを追加
+      document.addEventListener('keydown', handleEditKeypress);
+      contentSpan.addEventListener('compositionstart', handleCompositionStart);
+      contentSpan.addEventListener('compositionend', handleCompositionEnd);
     }
   </script>
 </body>
