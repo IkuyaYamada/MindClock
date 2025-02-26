@@ -2,14 +2,15 @@
 ![image](/img/capture.png)
 
 # todo
-- [] dateは不要でtimestampだけでよさそうである
-- [] tweet消せる機能
-- [] tweet引き継ぎ機能
-- [] 明らかにファイルを分割する段階に来ている
+- [ ] dateは不要でtimestampだけでよさそうである
+- [ ] tweet消せる機能
+- [ ] tweet引き継ぎ機能
+- [ ] 明らかにファイルを分割する段階に来ている
 - [x] 前に起動したときのサイズを覚えておく →サイズを大きくできたのでそれでOK
 
 # 準備
 - nvm install --lts
-- nvm use lts
+- nvm use --lts
+- npm install -g npm@latest
 - npm install
 - npm start
