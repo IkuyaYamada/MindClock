@@ -10,7 +10,7 @@
 
 
     body {
-      width: 630px;
+      width: 700px;
       margin: 0 auto;
       text-align: left;
       padding: 15px;
@@ -501,8 +501,9 @@
       }
 
       // 編集モード中はj,kキーの移動を無効化
+      // iy:ここにiも入れれば良いのでは
       const isEditing = document.querySelector('.tweet.editing') !== null;
-      if (isEditing && (e.key === 'j' || e.key === 'k')) {
+      if (isEditing && (e.key === 'j' || e.key === 'k' || e.key === 'i')) {
         return;
       }
 
@@ -554,6 +555,7 @@
         let currentIndex = tweets.indexOf(currentFocus);
 
         // 現在のフォーカスがツイート上にない場合は、最初/最後のツイートにフォーカス
+        // 多分実装できていない
         if (currentIndex === -1) {
           if (e.key === 'j') {
             tweets[0]?.focus();
@@ -595,7 +597,7 @@
       }
 
       // 選択されたツイートの削除 (⌘/Ctrl + D)
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'd') {
+      if (!e.shiftKey && e.key.toLowerCase() === 'd') {
         e.preventDefault();
         const focusedTweet = document.activeElement;
         if (focusedTweet && focusedTweet.classList.contains('tweet')) {
@@ -636,6 +638,7 @@
           document.getElementById('tweets').prepend(tweet);
 
           // 既存のツイートのインデックスを更新
+          // todo:なんか効率悪そう
           const existingTweets = document.querySelectorAll('.tweet:not(:first-child):not(.new-tweet)');
           existingTweets.forEach(existingTweet => {
             const oldIndex = parseInt(existingTweet.getAttribute('data-index'));
@@ -981,14 +984,14 @@
           e.preventDefault();
           e.stopPropagation();
           const newContent = contentSpan.textContent.trim();
-          
+
           if (newContent !== originalContent) {
             // 現在のインデックスを取得（表示順序の逆順を考慮）
             const currentIndex = tweetArray.length - 1 - index;
-            
+
             // ツイートの内容を更新
             tweetArray[currentIndex].content = newContent.replace(/\n/g, '<br>');
-            
+
             // 保存
             try {
               await ipcRenderer.invoke('save-tweets', tweetArray);
