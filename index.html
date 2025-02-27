@@ -442,7 +442,7 @@
   </div>
   <h1>Mind Clock</h1>
   <div id="timerDisplay">
-    <span class="time">Click to Start</span>
+    <span class="time">00:00:00</span>
     <div class="timer-controls">
       <button class="timer-button play-pause" onclick="toggleTimer()">▶</button>
       <button class="timer-button reset" onclick="resetTimer()">↺</button>
@@ -580,11 +580,6 @@
         controls.style.display = controls.style.display === 'none' || controls.style.display === '' ? 'flex' : 'none';
       }
 
-      // リセット (Esc)
-      if (e.key === 'Escape') {
-        resetTimer();
-      }
-
       // ツイートのエクスポート (⌘/Ctrl + Shift + E)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
@@ -668,16 +663,16 @@
       const date = new Date(timestamp);
       const now = new Date();
       const diffMinutes = Math.floor((now - date) / (1000 * 60));
-      
+
       if (diffMinutes < 1) return 'NOW';
       if (diffMinutes < 60) return `${diffMinutes}M AGO`;
-      
+
       const diffHours = Math.floor(diffMinutes / 60);
       if (diffHours < 24) return `${diffHours}H AGO`;
-      
+
       const diffDays = Math.floor(diffHours / 24);
       if (diffDays < 7) return `${diffDays}D AGO`;
-      
+
       return date.toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -727,13 +722,13 @@
 
     function autoResize(elem) {
       const minHeight = 80; // 最小の高さも80pxに
-      
+
       // スクロールの高さを正確に計測するための一時的な高さリセット
       elem.style.height = 'auto';
-      
+
       // 実際のコンテンツの高さを取得（最小値は保持）
       const newHeight = Math.max(elem.scrollHeight, minHeight);
-      
+
       // 現在の高さと新しい高さが異なる場合のみ更新
       if (elem.clientHeight !== newHeight) {
         elem.style.height = newHeight + 'px';
@@ -812,8 +807,8 @@
     function resetTimer() {
       running = false;
       clearInterval(timer);
-      accumulatedTime = 0;
-      document.querySelector('#timerDisplay .time').textContent = "Click to Start";
+      accumulatedTime = 0
+      document.querySelector('#timerDisplay .time').textContent = "00:00:00";
       document.getElementById('timerDisplay').classList.remove('running');
       document.querySelector('.timer-button.play-pause').textContent = '▶';
     }
