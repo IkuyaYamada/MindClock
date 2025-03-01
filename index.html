@@ -380,7 +380,7 @@
         opacity: 0;
       }
       50% {
-        opacity: 1;
+        opacity: 0.8;
       }
       100% {
         transform: translateY(100%);
@@ -388,15 +388,16 @@
       }
     }
     .tweet.matrix-effect::before {
-      content: attr(data-text);
+      content: '';
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(180deg, #0f0 0%, transparent 100%);
+      background: linear-gradient(180deg, rgba(0, 255, 0, 0.5) 0%, transparent 100%);
       animation: matrix-rain 1s linear;
       pointer-events: none;
+      z-index: 1;
     }
     .tweet.editing .content {
       background: rgba(0, 255, 0, 0.05);
@@ -461,6 +462,42 @@
       line-height: 1;
       padding: 2px 4px;
       white-space: nowrap;
+    }
+    .tweet.focused {
+      border-left: 5px solid #ff0 !important;
+      background: rgba(255, 255, 0, 0.08) !important;
+      box-shadow: 0 0 15px rgba(255, 255, 0, 0.3) !important;
+      position: relative;
+      z-index: 2;
+    }
+    .tweet.focused::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 1px solid rgba(255, 255, 0, 0.3);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .tweet.focused .content {
+      color: #ff0 !important;
+      text-shadow: 0 0 2px rgba(255, 255, 0, 0.5) !important;
+    }
+    .tweet.focused:hover {
+      background: rgba(255, 255, 0, 0.1) !important;
+    }
+    .tweet.focused:focus {
+      background: rgba(255, 255, 0, 0.12) !important;
+      box-shadow: 0 0 20px rgba(255, 255, 0, 0.4) !important;
+    }
+    .focus-indicator {
+      display: inline-block;
+      margin-right: 8px;
+      color: #ff0;
+      font-size: 16px;
+      text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
     }
   </style>
 </head>
@@ -537,6 +574,10 @@
         <span class="key">⌘</span><span class="key-separator">+</span><span class="key">?</span>
         <span>このヘルプを表示/非表示</span>
       </div>
+      <div class="shortcut-group">
+        <span class="key">f</span>
+        <span>選択中のツイートをフォーカス/フォーカス解除</span>
+      </div>
     </div>
   </div>
   <h1>Mind Clock</h1>
@@ -557,6 +598,8 @@
     <button id="importJsonBtn" title="Import from JSON">Import JSON</button>
     <button id="mergeJsonBtn" title="Merge with JSON">Merge JSON</button>
     <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+    <button id="toggleControlsBtn" title="Toggle shortcuts (Ctrl+?)">Shortcuts</button>
+    <button id="focusBtn" title="Focus on selected tweet (Ctrl+F)">Focus</button>
   </div>
 
   <div class="modal-overlay">
@@ -573,63 +616,216 @@
     const { ipcRenderer } = require('electron');
     let tweetArray = [];
 
-    // 起動時にツイートを読み込む
-    window.addEventListener('DOMContentLoaded', async () => {
+    // 編集モード中かどうかを確認する関数
+    function isEditing() {
+      return document.querySelector('.tweet.editing') !== null;
+    }
+
+    // イベントリスナーの設定
+    document.addEventListener('DOMContentLoaded', async () => {
+      // ツイートの読み込み
       try {
-        // ツイートを読み込む
         tweetArray = await ipcRenderer.invoke('load-tweets');
         refreshTweetDisplay(tweetArray);
         
-        // テキストエリアの初期設定
-        const textarea = document.getElementById('tweetInput');
-        if (textarea) {
-          textarea.style.height = '80px';
-          autoResize(textarea);
-        }
-        
-        // ボタンのイベントリスナーを設定
-        document.getElementById('exportBtn').addEventListener('click', exportTweets);
-        document.getElementById('flushBtn').addEventListener('click', flushTweets);
-        
-        // JSONエクスポート/インポート/マージボタンのイベントリスナーを追加
-        document.getElementById('exportJsonBtn').addEventListener('click', exportTweetsAsJson);
-        document.getElementById('importJsonBtn').addEventListener('click', importTweetsFromJson);
-        document.getElementById('mergeJsonBtn').addEventListener('click', mergeTweetsFromJson);
-        
-        // 新規ツイート作成エリアにフォーカスを移動
+        // ツイート表示後にフォーカス状態を復元（遅延実行）
         setTimeout(() => {
-          const newTweet = document.querySelector('.tweet.new-tweet');
-          if (newTweet) {
-            newTweet.focus();
-            // オプション: 自動的に編集モードに入る場合はコメントを外す
-            // enterNewTweetEditMode(newTweet);
-          }
-        }, 100);
+          console.log('Delayed focus state restoration');
+          restoreFocusState();
+        }, 200);
       } catch (error) {
         console.error('Failed to load tweets:', error);
+        showMessage('ツイートの読み込みに失敗しました');
       }
+
+      // 新規ツイート入力欄の設定
+      const newTweetElement = document.querySelector('.tweet.new-tweet');
+      if (newTweetElement) {
+        newTweetElement.addEventListener('click', () => {
+          if (!newTweetElement.classList.contains('editing')) {
+            enterNewTweetEditMode(newTweetElement);
+          }
+        });
+      }
+
+      // エクスポートボタンのイベントリスナー
+      document.getElementById('exportBtn').addEventListener('click', exportTweets);
+      
+      // JSONエクスポートボタンのイベントリスナー
+      document.getElementById('exportJsonBtn').addEventListener('click', exportTweetsAsJson);
+      
+      // JSONインポートボタンのイベントリスナー
+      document.getElementById('importJsonBtn').addEventListener('click', importTweetsFromJson);
+      
+      // JSONマージボタンのイベントリスナー
+      document.getElementById('mergeJsonBtn').addEventListener('click', mergeTweetsFromJson);
+      
+      // ショートカット表示ボタンのイベントリスナー
+      document.getElementById('toggleControlsBtn').addEventListener('click', () => {
+        const controls = document.querySelector('.controls-info');
+        controls.style.display = controls.style.display === 'none' || controls.style.display === '' ? 'flex' : 'none';
+      });
+      
+      // フォーカスボタンのイベントリスナー
+      document.getElementById('focusBtn').addEventListener('click', () => {
+        console.log('Focus button clicked');
+        // 現在フォーカスされているツイートがない場合は、最初のツイートにフォーカスを移動
+        const currentFocus = document.activeElement;
+        if (!currentFocus || !currentFocus.classList.contains('tweet') || currentFocus.classList.contains('child-tweet') || currentFocus.classList.contains('new-tweet')) {
+          const firstTweet = document.querySelector('.tweet:not(.child-tweet):not(.new-tweet)');
+          if (firstTweet) {
+            firstTweet.focus();
+            console.log('Focus moved to first tweet');
+          }
+        }
+        
+        // フォーカス機能を実行
+        toggleFocusOnTweet();
+      });
+      
+      // 全削除ボタンのイベントリスナー
+      document.querySelector('.flush-btn').addEventListener('click', flushTweets);
+      
+      // モーダルのボタンイベントリスナー
+      document.getElementById('confirmFlushBtn').addEventListener('click', confirmFlush);
+      document.getElementById('cancelFlushBtn').addEventListener('click', cancelFlush);
     });
 
     // キーボードショートカットの設定
-    document.addEventListener('keydown', function(e) {
-      // 入力中は特定のショートカットを無効化
-      if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
-        // ⌘/Ctrl + Enterでツイート投稿
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-          e.preventDefault();
-          const tweetInput = document.getElementById('tweetInput');
-          if (tweetInput.value.trim()) {
-            postTweet(tweetInput.value.trim());
-            tweetInput.value = '';
-            autoResize(tweetInput);
+    document.addEventListener('keydown', (e) => {
+      // 編集中の場合はショートカットを無効化
+      if (isEditing() && e.key !== 'Escape') {
+        return;
+      }
+
+      // 新規ツイート入力 (⌘/Ctrl + N)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        const newTweetElement = document.querySelector('.tweet.new-tweet');
+        if (newTweetElement && !newTweetElement.classList.contains('editing')) {
+          enterNewTweetEditMode(newTweetElement);
+        }
+        return;
+      }
+
+      // 選択されたツイートの編集 (iキー)
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        const focusedTweet = document.activeElement;
+        if (focusedTweet && focusedTweet.classList.contains('tweet')) {
+          if (focusedTweet.classList.contains('child-tweet')) {
+            // 子ツイートの編集
+            const parentIndex = parseInt(focusedTweet.getAttribute('data-parent-index'));
+            const childIndex = parseInt(focusedTweet.getAttribute('data-child-index'));
+            if (!isNaN(parentIndex) && !isNaN(childIndex)) {
+              editChildTweet(parentIndex, childIndex);
+            }
+          } else if (!focusedTweet.classList.contains('new-tweet')) {
+            // 親ツイートの編集
+            const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
+            if (!isNaN(actualIndex)) {
+              editTweet(actualIndex);
+            }
           }
         }
         return;
       }
 
-      // 編集モード中はj,kキーの移動を無効化
-      const isEditing = document.querySelector('.tweet.editing') !== null;
-      if (isEditing && (e.key === 'j' || e.key === 'k' || e.key === 'i' || e.key === 'd' || e.key === 'r')) {
+      // ツイート間の移動 (j/kキー)
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && (e.key === 'j' || e.key === 'k')) {
+        e.preventDefault();
+        const currentFocus = document.activeElement;
+        
+        if (!currentFocus || !currentFocus.classList.contains('tweet')) {
+          // フォーカスがツイートにない場合は最初のツイートにフォーカス
+          const firstTweet = document.querySelector('.tweet:not(.new-tweet)');
+          if (firstTweet) {
+            firstTweet.focus();
+          }
+          return;
+        }
+        
+        // 表示されているすべてのツイート（親と展開されている子）を取得
+        const parentTweets = Array.from(document.querySelectorAll('.tweet:not(.child-tweet):not(.new-tweet)'));
+        const expandedChildren = Array.from(document.querySelectorAll('.children-container.expanded .tweet.child-tweet'));
+        const visibleTweets = [...parentTweets, ...expandedChildren].sort((a, b) => {
+          // DOMでの位置に基づいてソート
+          return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+        });
+        
+        // 子ツイートが表示されているかどうかを確認
+        const hasExpandedChildren = document.querySelector('.children-container.expanded') !== null;
+        
+        if (hasExpandedChildren) {
+          // 子ツイートが表示されている場合は、表示されているすべてのツイート間を移動
+          const visibleIndex = visibleTweets.indexOf(currentFocus);
+          
+          if (e.key === 'j') {
+            // 次のツイートへ（自分の子ツイートへ）
+            if (visibleIndex < visibleTweets.length - 1) {
+              visibleTweets[visibleIndex + 1]?.focus();
+            } else {
+              // 最後のツイートの場合は最初に戻る
+              visibleTweets[0]?.focus();
+            }
+          } else {
+            // 前のツイートへ
+            if (visibleIndex > 0) {
+              visibleTweets[visibleIndex - 1]?.focus();
+            } else {
+              // 最初のツイートの場合は最後に移動
+              visibleTweets[visibleTweets.length - 1]?.focus();
+            }
+          }
+        } else {
+          // 子ツイートが表示されていない場合は、親ツイート間を移動
+          const parentTweetIndex = parentTweets.indexOf(currentFocus);
+          
+          if (e.key === 'j') {
+            // 次の親ツイートへ
+            if (parentTweetIndex < parentTweets.length - 1) {
+              parentTweets[parentTweetIndex + 1]?.focus();
+            } else {
+              // 最後の親ツイートの場合は最初に戻る
+              parentTweets[0]?.focus();
+            }
+          } else {
+            // 前の親ツイートへ
+            if (parentTweetIndex > 0) {
+              parentTweets[parentTweetIndex - 1]?.focus();
+            } else {
+              // 最初の親ツイートの場合は最後に移動
+              parentTweets[parentTweets.length - 1]?.focus();
+            }
+          }
+        }
+        return;
+      }
+
+      // ショートカット一覧の表示/非表示 (⌘/Ctrl + ?)
+      if ((e.ctrlKey || e.metaKey) && (e.key === '?' || e.key === '/')) {
+        e.preventDefault();
+        const controls = document.querySelector('.controls-info');
+        controls.style.display = controls.style.display === 'none' || controls.style.display === '' ? 'flex' : 'none';
+        return;
+      }
+
+      // フォーカス機能のショートカット (f)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key === 'f') {
+        e.preventDefault();
+        console.log('Focus shortcut triggered');
+        
+        // 現在フォーカスされているツイートがない場合は、最初のツイートにフォーカスを移動
+        const currentFocus = document.activeElement;
+        if (!currentFocus || !currentFocus.classList.contains('tweet') || currentFocus.classList.contains('child-tweet') || currentFocus.classList.contains('new-tweet')) {
+          const firstTweet = document.querySelector('.tweet:not(.child-tweet):not(.new-tweet)');
+          if (firstTweet) {
+            firstTweet.focus();
+            console.log('Focus moved to first tweet by shortcut');
+          }
+        }
+        
+        toggleFocusOnTweet();
         return;
       }
 
@@ -812,49 +1008,6 @@
             }
           }
         }
-        return;
-      }
-
-      // ショートカット一覧の表示/非表示 (⌘/Ctrl + ?)
-      if ((e.ctrlKey || e.metaKey) && (e.key === '?' || e.key === '/')) {
-        e.preventDefault();
-        const controls = document.querySelector('.controls-info');
-        controls.style.display = controls.style.display === 'none' || controls.style.display === '' ? 'flex' : 'none';
-        return;
-      }
-
-      // ツイートのエクスポート (⌘/Ctrl + Shift + E)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
-        e.preventDefault();
-        exportTweets();
-        return;
-      }
-
-      // JSONエクスポート (⌘/Ctrl + Shift + J)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'j') {
-        e.preventDefault();
-        exportTweetsAsJson();
-        return;
-      }
-
-      // JSONインポート (⌘/Ctrl + Shift + I)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
-        e.preventDefault();
-        importTweetsFromJson();
-        return;
-      }
-
-      // JSONマージ (⌘/Ctrl + Shift + M)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
-        e.preventDefault();
-        mergeTweetsFromJson();
-        return;
-      }
-
-      // 全ツイート削除 (⌘/Ctrl + Shift + D)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
-        e.preventDefault();
-        flushTweets();
         return;
       }
 
@@ -1200,6 +1353,7 @@
         const dateStr = now.toISOString().replace(/[:.]/g, '-').replace('T', '_').split('Z')[0];
         a.download = `mind_clock_export_${dateStr}.json`;
         
+        
         // リンクをクリックしてダウンロード
         document.body.appendChild(a);
         a.click();
@@ -1312,6 +1466,13 @@
       `;
       tweetsContainer.appendChild(newTweetElement);
       
+      // 新規ツイート入力欄のクリックイベントを設定
+      newTweetElement.addEventListener('click', () => {
+        if (!newTweetElement.classList.contains('editing')) {
+          enterNewTweetEditMode(newTweetElement);
+        }
+      });
+      
       // ツイートを表示（新しい順）
       for (let idx = 0; idx < tweetArray.length; idx++) {
         const tweetIndex = tweetArray.length - 1 - idx; // 表示順序は逆だが、実際のインデックスを使用
@@ -1351,6 +1512,13 @@
           tweetElement.insertBefore(hasChildrenIndicator, contentSpan);
         }
       }
+      
+      console.log('Refreshed tweet display, now restoring focus state');
+      
+      // ツイート表示後にフォーカス状態を復元
+      setTimeout(() => {
+        restoreFocusState();
+      }, 100);
     }
 
     // 親ツイート要素を作成する関数
@@ -1989,6 +2157,213 @@
       contentSpan.addEventListener('compositionstart', handleCompositionStart);
       contentSpan.addEventListener('compositionend', handleCompositionEnd);
     }
+
+    // フォーカス機能の実装
+    let focusedTweetIndex = null;
+
+    // ツイートにフォーカスを設定する関数
+    function toggleFocusOnTweet() {
+      const focusedTweet = document.activeElement;
+      console.log('Active element:', focusedTweet);
+      
+      if (!focusedTweet || !focusedTweet.classList.contains('tweet') || focusedTweet.classList.contains('child-tweet')) {
+        console.log('No valid tweet to focus');
+        return;
+      }
+      
+      // data-actual-index属性から実際のデータ配列内のインデックスを取得
+      const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
+      if (isNaN(actualIndex)) {
+        console.error('Invalid tweet index');
+        return;
+      }
+      
+      console.log('Toggle focus on tweet with index:', actualIndex);
+      console.log('Current focused tweet index:', focusedTweetIndex);
+      
+      // 現在のフォーカス状態を確認
+      if (focusedTweetIndex === actualIndex) {
+        // 同じツイートがフォーカスされている場合はフォーカスを解除
+        console.log('Removing focus');
+        focusedTweetIndex = null;
+        
+        // すべてのツイートからフォーカスクラスを削除
+        const focusedElements = document.querySelectorAll('.tweet.focused');
+        console.log('Found focused elements to remove:', focusedElements.length);
+        
+        focusedElements.forEach(tweet => {
+          tweet.classList.remove('focused');
+          console.log('Removed focused class from tweet');
+          
+          const focusIndicator = tweet.querySelector('.focus-indicator');
+          if (focusIndicator) {
+            focusIndicator.remove();
+            console.log('Removed focus indicator');
+          }
+        });
+        
+        // フォーカス状態を保存
+        try {
+          localStorage.removeItem('focusedTweetIndex');
+          console.log('Focus state removed from localStorage');
+        } catch (e) {
+          console.error('Error removing focus state from localStorage:', e);
+        }
+      } else {
+        // 新しいツイートをフォーカス
+        console.log('Setting new focus');
+        
+        // 以前のフォーカスを解除
+        const previousFocused = document.querySelectorAll('.tweet.focused');
+        console.log('Found previously focused elements:', previousFocused.length);
+        
+        previousFocused.forEach(tweet => {
+          tweet.classList.remove('focused');
+          console.log('Removed focused class from previous tweet');
+          
+          const focusIndicator = tweet.querySelector('.focus-indicator');
+          if (focusIndicator) {
+            focusIndicator.remove();
+            console.log('Removed previous focus indicator');
+          }
+        });
+        
+        // 新しいフォーカスを設定
+        focusedTweetIndex = actualIndex;
+        
+        // フォーカスクラスを追加
+        focusedTweet.classList.add('focused');
+        console.log('Added focused class to new tweet');
+        
+        // フォーカスインジケータを追加
+        const contentElement = focusedTweet.querySelector('.content');
+        if (contentElement) {
+          const focusIndicator = document.createElement('span');
+          focusIndicator.className = 'focus-indicator';
+          focusIndicator.innerHTML = '★';
+          contentElement.insertBefore(focusIndicator, contentElement.firstChild);
+          console.log('Added focus indicator to new tweet');
+        } else {
+          console.log('Content element not found in tweet');
+        }
+        
+        // フォーカス状態を保存
+        try {
+          localStorage.setItem('focusedTweetIndex', actualIndex.toString());
+          console.log('Focus state saved as:', actualIndex.toString());
+        } catch (e) {
+          console.error('Error saving focus state to localStorage:', e);
+        }
+        
+        // デバッグ情報
+        console.log('After toggle, focused tweet index:', focusedTweetIndex);
+        console.log('Focused elements:', document.querySelectorAll('.tweet.focused').length);
+        console.log('Focus indicators:', document.querySelectorAll('.focus-indicator').length);
+      }
+    }
+
+    // 保存されたフォーカス状態を復元する関数
+    function restoreFocusState() {
+      let savedFocusIndex = null;
+      
+      try {
+        savedFocusIndex = localStorage.getItem('focusedTweetIndex');
+        console.log('Restoring focus state, saved index:', savedFocusIndex);
+      } catch (e) {
+        console.error('Error reading focus state from localStorage:', e);
+        return;
+      }
+      
+      if (savedFocusIndex && savedFocusIndex !== 'null') {
+        const parsedIndex = parseInt(savedFocusIndex, 10);
+        if (isNaN(parsedIndex)) {
+          console.log('Invalid saved focus index:', savedFocusIndex);
+          return;
+        }
+        
+        focusedTweetIndex = parsedIndex;
+        console.log('Parsed focus index:', focusedTweetIndex);
+        
+        // 少し遅延させてDOMが完全に読み込まれた後に実行
+        setTimeout(() => {
+          const tweetToFocus = document.querySelector(`.tweet[data-actual-index="${focusedTweetIndex}"]:not(.child-tweet)`);
+          console.log('Tweet to focus:', tweetToFocus);
+          
+          if (tweetToFocus) {
+            // フォーカスクラスを追加
+            tweetToFocus.classList.add('focused');
+            console.log('Added focused class to tweet');
+            
+            // フォーカスインジケータを追加
+            const contentElement = tweetToFocus.querySelector('.content');
+            if (contentElement) {
+              // 既存のインジケータがあれば削除
+              const existingIndicator = contentElement.querySelector('.focus-indicator');
+              if (existingIndicator) {
+                existingIndicator.remove();
+                console.log('Removed existing focus indicator');
+              }
+              
+              const focusIndicator = document.createElement('span');
+              focusIndicator.className = 'focus-indicator';
+              focusIndicator.innerHTML = '★';
+              contentElement.insertBefore(focusIndicator, contentElement.firstChild);
+              console.log('Added focus indicator to tweet content');
+            }
+            
+            console.log('Focus applied to element');
+          } else {
+            console.log('Tweet to focus not found');
+            // ツイートが見つからない場合はフォーカス状態をリセット
+            focusedTweetIndex = null;
+            try {
+              localStorage.removeItem('focusedTweetIndex');
+              console.log('Focus state removed from localStorage (tweet not found)');
+            } catch (e) {
+              console.error('Error removing focus state from localStorage:', e);
+            }
+          }
+        }, 200); // 遅延を200ミリ秒に短縮
+      } else {
+        console.log('No focus to restore');
+        focusedTweetIndex = null;
+      }
+    }
+
+    // イベントリスナーの設定
+    document.addEventListener('DOMContentLoaded', () => {
+      // ... existing code ...
+      
+      // フォーカスボタンのイベントリスナー
+      document.getElementById('focusBtn').addEventListener('click', () => {
+        console.log('Focus button clicked');
+        // 現在フォーカスされているツイートがない場合は、最初のツイートにフォーカスを移動
+        const currentFocus = document.activeElement;
+        if (!currentFocus || !currentFocus.classList.contains('tweet') || currentFocus.classList.contains('child-tweet') || currentFocus.classList.contains('new-tweet')) {
+          const firstTweet = document.querySelector('.tweet:not(.child-tweet):not(.new-tweet)');
+          if (firstTweet) {
+            firstTweet.focus();
+          }
+        }
+        
+        // フォーカス機能を実行
+        toggleFocusOnTweet();
+      });
+      
+      // キーボードショートカットの追加
+      document.addEventListener('keydown', (e) => {
+        // ... existing code ...
+        
+        // フォーカス機能のショートカット (f)
+        if (e.key === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey && !isEditing()) {
+          e.preventDefault();
+          toggleFocusOnTweet();
+        }
+      });
+      
+      // 初期表示時にフォーカス状態を復元
+      restoreFocusState();
+    });
   </script>
 </body>
 </html>
