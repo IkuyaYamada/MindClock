@@ -98,19 +98,14 @@
       font-size: 15px;
       margin: 10px 0;
       resize: none;
-      overflow: hidden;
-      background-color: #0a0a0a;
+      padding: 10px;
+      border: 1px solid #0f0;
+      border-radius: 5px;
+      background-color: #000;
       color: #0f0;
-      border: none;
-      outline: none;
-      padding: 15px;
       font-family: 'Kaisei Tokumin', serif;
-      border-radius: 3px;
-      box-shadow: 0 0 10px #0f03, inset 0 0 15px #0002;
-      position: relative;
-      transition: all 0.3s ease;
-      height: 80px;
       box-sizing: border-box;
+      overflow: hidden;
       -webkit-app-region: no-drag;
     }
     textarea:focus {
@@ -166,6 +161,7 @@
       margin-bottom: 10px;
       border-bottom: 1px solid #0f0;
       padding: 10px;
+      padding-left: 15px;
       font-family: 'Yusei Magic';
       display: flex;
       justify-content: space-between;
@@ -173,14 +169,16 @@
       position: relative;
       overflow: hidden;
       outline: none;
-      transition: all 0.2s ease;
       cursor: pointer;
       border-radius: 3px;
       -webkit-app-region: no-drag;
+      border-left: 5px solid transparent;
+      box-sizing: border-box;
     }
     .tweet:focus {
       background: rgba(0, 255, 0, 0.05);
       box-shadow: 0 0 10px #0f03;
+      border-left: 5px solid #0f0;
       padding-left: 15px;
     }
     .tweet:hover {
@@ -197,28 +195,78 @@
       opacity: 0.5;
       font-family: 'Orbitron', sans-serif;
       margin-right: 10px;
-      transition: opacity 0.3s ease;
+      min-width: 85px;
+      text-align: right;
     }
     .tweet:hover span.time {
       opacity: 1;
     }
-    .controls-info {
+    /* 子ツイート関連のスタイル */
+    .tweet.child-tweet {
+      margin-left: 20px;
+      font-size: 16px;
+      border-left: 5px solid transparent;
+      border-bottom: 1px dashed #0f0;
+    }
+    .tweet.child-tweet:focus {
+      border-left: 5px solid #0f0;
+    }
+    .tweet .child-indicator {
       position: absolute;
-      right: 15px;
-      top: 15px;
+      left: -15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #0f0;
+      font-size: 14px;
+      opacity: 0.7;
+    }
+    .tweet .has-children-indicator {
+      margin-right: 5px;
+      color: #0f0;
+      font-size: 14px;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    .tweet .has-children-indicator:hover {
+      opacity: 1;
+    }
+    .children-container {
+      margin-left: 20px;
+      border-left: 1px dashed #0f0;
+      padding-left: 10px;
       display: none;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
-      font-family: 'Orbitron', sans-serif;
-      opacity: 0.4;
-      transition: opacity 0.3s ease;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 10px;
-      border: 1px solid #0f03;
-      border-radius: 5px;
-      backdrop-filter: blur(3px);
-      -webkit-app-region: no-drag;
+    }
+    .children-container.expanded {
+      display: block;
+    }
+    .tweet-actions {
+      display: flex;
+      gap: 5px;
+      margin-right: 5px;
+    }
+    .tweet-action {
+      color: #0f0;
+      opacity: 0.5;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .tweet-action:hover {
+      opacity: 1;
+    }
+    .controls-info {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.9);
+      border: 1px solid #0f0;
+      border-radius: 10px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 0 20px #0f0;
+      max-width: 80%;
+      max-height: 80%;
+      overflow-y: auto;
     }
     .controls-info:hover {
       opacity: 1;
@@ -377,67 +425,118 @@
     .tweet.new-tweet.editing .content {
       color: #0f0;
     }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+      -webkit-app-region: no-drag;
+    }
+    .controls button {
+      flex: 0 0 auto;
+    }
+    .shortcuts h3 {
+      color: #0f0;
+      text-align: center;
+      margin-top: 0;
+    }
+    .shortcuts ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .shortcuts li {
+      margin: 10px 0;
+      color: #0f0;
+    }
+    kbd {
+      background-color: #111;
+      border: 1px solid #0f0;
+      border-radius: 3px;
+      box-shadow: 0 1px 1px rgba(0, 255, 0, 0.2);
+      color: #0f0;
+      display: inline-block;
+      font-size: 0.85em;
+      font-family: 'Orbitron', sans-serif;
+      line-height: 1;
+      padding: 2px 4px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
-  <div class="controls-info">
-    <div class="shortcut-group">
-      <span class="key">⌘</span>
-      <span class="key-separator">+</span>
-      <span class="key">S</span>
-      <span>タイマーの開始/停止</span>
-    </div>
-    <div class="shortcut-group">
-      <span class="key">⌘</span>
-      <span class="key-separator">+</span>
-      <span class="key">Shift</span>
-      <span class="key-separator">+</span>
-      <span class="key">S</span>
-      <span>タイマーのリセット</span>
-    </div>
-    <div class="shortcut-group">
-      <span class="key">⌘</span>
-      <span class="key-separator">+</span>
-      <span class="key">N</span>
-      <span>新規ツイート入力</span>
-    </div>
-    <div class="shortcut-group">
-      <span class="key">i</span>
-      <span>選択中のツイートを編集</span>
-    </div>
-    <div class="shortcut-group">
-      <span class="key">⌘</span>
-      <span class="key-separator">+</span>
-      <span class="key">Enter</span>
-      <span>ツイートの投稿/保存</span>
-    </div>
-    <div class="shortcut-group">
-      <span class="key">j</span>
-      <span class="key-separator">/</span>
-      <span class="key">k</span>
-      <span>ツイート間の移動</span>
-    </div>
-    <div class="shortcut-group">
-      <span class="key">⌘</span>
-      <span class="key-separator">+</span>
-      <span class="key">Shift</span>
-      <span class="key-separator">+</span>
-      <span class="key">E</span>
-      <span>ツイートのエクスポート</span>
-    </div>
-    <div class="shortcut-group">
-      <span class="key">⌘/Ctrl</span>
-      <span class="key-separator">+</span>
-      <span class="key">D</span>
-      <span>選択中のツイートを削除</span>
-    </div>
-    <div class="shortcut-group">
-      <span class="key">⌘/Ctrl</span>
-      <span class="key-separator">+</span>
-      <span class="key">Shift</span>
-      <span class="key-separator">+</span>
-      <span class="key">D</span>
-      <span>全てのツイートを削除</span>
+  <div class="controls-info" style="display: none; flex-direction: column; gap: 10px;">
+    <h3 style="color: #0f0; text-align: center; margin-bottom: 10px;">キーボードショートカット</h3>
+    
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div class="shortcut-group">
+        <span class="key">j</span>
+        <span>次のツイートへ移動</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">k</span>
+        <span>前のツイートへ移動</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">i</span>
+        <span>選択中のツイートを編集</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">d</span>
+        <span>選択中のツイートを削除</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">o</span>
+        <span>選択中のツイートに返信（子ツイート追加）</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">space</span>
+        <span>選択中のツイートの子ツイート表示/非表示</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">n</span>
+        <span>新規ツイート入力</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">enter</span>
+        <span>ツイート投稿/編集完了</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">esc</span>
+        <span>編集キャンセル</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">s</span>
+        <span>タイマー開始/停止</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">s</span>
+        <span>タイマーリセット</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">e</span>
+        <span>ツイートをテキストとしてエクスポート</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">j</span>
+        <span>ツイートをJSONとしてエクスポート</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">i</span>
+        <span>JSONからツイートをインポート</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">m</span>
+        <span>JSONからツイートをマージ</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">d</span>
+        <span>全ツイート削除</span>
+      </div>
+      <div class="shortcut-group">
+        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">?</span>
+        <span>このヘルプを表示/非表示</span>
+      </div>
     </div>
   </div>
   <h1>Mind Clock</h1>
@@ -449,13 +548,16 @@
     </div>
   </div>
   <div id="message"></div>
-  <div class="input-container">
-    <div class="tweet new-tweet" tabindex="0">
-      <span class="content" contenteditable="false">Initialize thought sequence...</span>
-    </div>
-  </div>
   <div id="tweets"></div>
-  <button class="flush-btn" onclick="flushTweets()">FLUSH ALL</button>
+  <div class="controls">
+    <button id="exportBtn" title="Export tweets (Ctrl+Shift+E)">Export</button>
+    <button id="flushBtn" title="Delete all tweets (Ctrl+Shift+D)">Delete All</button>
+    <!-- JSONエクスポート/インポート/マージボタンを追加 -->
+    <button id="exportJsonBtn" title="Export as JSON">Export JSON</button>
+    <button id="importJsonBtn" title="Import from JSON">Import JSON</button>
+    <button id="mergeJsonBtn" title="Merge with JSON">Merge JSON</button>
+    <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+  </div>
 
   <div class="modal-overlay">
     <div class="modal-content">
@@ -474,37 +576,60 @@
     // 起動時にツイートを読み込む
     window.addEventListener('DOMContentLoaded', async () => {
       try {
+        // ツイートを読み込む
         tweetArray = await ipcRenderer.invoke('load-tweets');
-        // 保存されていたツイートを表示
-        const tweetsContainer = document.getElementById('tweets');
-        tweetArray.forEach((tweet, index) => {
-          const tweetElement = document.createElement('div');
-          tweetElement.className = 'tweet';
-          tweetElement.setAttribute('data-text', tweet.content);
-          tweetElement.setAttribute('data-index', tweetArray.length - 1 - index); // 表示順序の逆順を考慮
-          tweetElement.setAttribute('tabindex', '0');
-          tweetElement.innerHTML = `
-            <span class="content">${tweet.content}</span>
-            <span class="time">${formatTime(tweet.timestamp)}</span>
-          `;
-          tweetsContainer.prepend(tweetElement);
-        });
+        refreshTweetDisplay(tweetArray);
+        
+        // テキストエリアの初期設定
+        const textarea = document.getElementById('tweetInput');
+        if (textarea) {
+          textarea.style.height = '80px';
+          autoResize(textarea);
+        }
+        
+        // ボタンのイベントリスナーを設定
+        document.getElementById('exportBtn').addEventListener('click', exportTweets);
+        document.getElementById('flushBtn').addEventListener('click', flushTweets);
+        
+        // JSONエクスポート/インポート/マージボタンのイベントリスナーを追加
+        document.getElementById('exportJsonBtn').addEventListener('click', exportTweetsAsJson);
+        document.getElementById('importJsonBtn').addEventListener('click', importTweetsFromJson);
+        document.getElementById('mergeJsonBtn').addEventListener('click', mergeTweetsFromJson);
+        
+        // 新規ツイート作成エリアにフォーカスを移動
+        setTimeout(() => {
+          const newTweet = document.querySelector('.tweet.new-tweet');
+          if (newTweet) {
+            newTweet.focus();
+            // オプション: 自動的に編集モードに入る場合はコメントを外す
+            // enterNewTweetEditMode(newTweet);
+          }
+        }, 100);
       } catch (error) {
         console.error('Failed to load tweets:', error);
       }
     });
 
+    // キーボードショートカットの設定
     document.addEventListener('keydown', function(e) {
-      // モーダル表示中は他のキー操作を無効化
-      if (document.querySelector('.modal-overlay').style.display === 'block') {
+      // 入力中は特定のショートカットを無効化
+      if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
+        // ⌘/Ctrl + Enterでツイート投稿
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          const tweetInput = document.getElementById('tweetInput');
+          if (tweetInput.value.trim()) {
+            postTweet(tweetInput.value.trim());
+            tweetInput.value = '';
+            autoResize(tweetInput);
+          }
+        }
         return;
       }
 
       // 編集モード中はj,kキーの移動を無効化
-      // iy:ここにiも入れれば良いのでは
-      // iy:dも入れる
       const isEditing = document.querySelector('.tweet.editing') !== null;
-      if (isEditing && (e.key === 'j' || e.key === 'k' || e.key === 'i' || e.key === 'd')) {
+      if (isEditing && (e.key === 'j' || e.key === 'k' || e.key === 'i' || e.key === 'd' || e.key === 'r')) {
         return;
       }
 
@@ -540,9 +665,19 @@
         if (focusedTweet && focusedTweet.classList.contains('tweet')) {
           if (focusedTweet.classList.contains('new-tweet')) {
             enterNewTweetEditMode(focusedTweet);
+          } else if (focusedTweet.classList.contains('child-tweet')) {
+            // 子ツイートの編集
+            const parentIndex = parseInt(focusedTweet.getAttribute('data-parent-index'));
+            const childIndex = parseInt(focusedTweet.getAttribute('data-child-index'));
+            if (!isNaN(parentIndex) && !isNaN(childIndex)) {
+              editChildTweet(parentIndex, childIndex);
+            }
           } else {
-            const index = parseInt(focusedTweet.getAttribute('data-index'));
-            editTweet(index);
+            // 親ツイートの編集
+            const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
+            if (!isNaN(actualIndex)) {
+              editTweet(actualIndex);
+            }
           }
         }
         return;
@@ -551,28 +686,132 @@
       // j,kキーでの移動
       if (!e.ctrlKey && !e.metaKey && !e.shiftKey && (e.key === 'j' || e.key === 'k')) {
         e.preventDefault();
-        const tweets = Array.from(document.querySelectorAll('.tweet'));
+        const allTweets = Array.from(document.querySelectorAll('.tweet'));
         const currentFocus = document.activeElement;
-        let currentIndex = tweets.indexOf(currentFocus);
+        let currentIndex = allTweets.indexOf(currentFocus);
 
         // 現在のフォーカスがツイート上にない場合は、最初/最後のツイートにフォーカス
-        // 多分実装できていない
         if (currentIndex === -1) {
           if (e.key === 'j') {
-            tweets[0]?.focus();
+            allTweets[0]?.focus();
           } else {
-            tweets[tweets.length - 1]?.focus();
+            allTweets[allTweets.length - 1]?.focus();
           }
           return;
         }
 
-        // j: 下へ移動, k: 上へ移動
-        if (e.key === 'j') {
-          currentIndex = Math.min(currentIndex + 1, tweets.length - 1);
+        // 現在フォーカスされているのが子ツイートかどうか
+        const isChildTweet = currentFocus.classList.contains('child-tweet');
+        
+        // 親ツイートのみを取得
+        const parentTweets = Array.from(document.querySelectorAll('.tweet:not(.child-tweet)'));
+        
+        // 表示されている子ツイートを含むすべてのツイートを取得
+        const visibleTweets = Array.from(document.querySelectorAll('.tweet:not(.child-tweet), .children-container.expanded .tweet.child-tweet'));
+        
+        if (isChildTweet) {
+          // 子ツイートの場合
+          const parentIndex = parseInt(currentFocus.getAttribute('data-parent-index'));
+          const parentTweet = document.querySelector(`.tweet[data-actual-index="${parentIndex}"]`);
+          
+          // 親ツイートの子ツイートコンテナが展開されているかチェック
+          const childrenContainer = document.querySelector(`.children-container[data-parent-index="${parentIndex}"]`);
+          const isExpanded = childrenContainer && childrenContainer.classList.contains('expanded');
+          
+          if (isExpanded) {
+            // 子ツイートが表示されている場合は、表示されているすべてのツイート間を移動
+            const visibleIndex = visibleTweets.indexOf(currentFocus);
+            
+            if (e.key === 'j') {
+              // 次のツイートへ
+              if (visibleIndex < visibleTweets.length - 1) {
+                visibleTweets[visibleIndex + 1]?.focus();
+              } else {
+                // 最後のツイートの場合は最初に戻る
+                visibleTweets[0]?.focus();
+              }
+            } else {
+              // 前のツイートへ
+              if (visibleIndex > 0) {
+                visibleTweets[visibleIndex - 1]?.focus();
+              } else {
+                // 最初のツイートの場合は最後に移動
+                visibleTweets[visibleTweets.length - 1]?.focus();
+              }
+            }
+          } else {
+            // 子ツイートが表示されていない場合は、親ツイート間を移動
+            const parentTweetIndex = parentTweets.indexOf(parentTweet);
+            
+            if (e.key === 'j') {
+              // 次の親ツイートへ
+              if (parentTweetIndex < parentTweets.length - 1) {
+                parentTweets[parentTweetIndex + 1]?.focus();
+              } else {
+                // 最後の親ツイートの場合は最初に戻る
+                parentTweets[0]?.focus();
+              }
+            } else {
+              // 前の親ツイートへ
+              if (parentTweetIndex > 0) {
+                parentTweets[parentTweetIndex - 1]?.focus();
+              } else {
+                // 最初の親ツイートの場合は最後に移動
+                parentTweets[parentTweets.length - 1]?.focus();
+              }
+            }
+          }
         } else {
-          currentIndex = Math.max(currentIndex - 1, 0);
+          // 親ツイートの場合
+          // この親ツイートの子ツイートコンテナが展開されているかチェック
+          const actualIndex = parseInt(currentFocus.getAttribute('data-actual-index'));
+          const childrenContainer = document.querySelector(`.children-container[data-parent-index="${actualIndex}"]`);
+          const isExpanded = childrenContainer && childrenContainer.classList.contains('expanded');
+          
+          if (isExpanded && childrenContainer.querySelectorAll('.tweet.child-tweet').length > 0) {
+            // 子ツイートが表示されている場合は、表示されているすべてのツイート間を移動
+            const visibleIndex = visibleTweets.indexOf(currentFocus);
+            
+            if (e.key === 'j') {
+              // 次のツイートへ（自分の子ツイートへ）
+              if (visibleIndex < visibleTweets.length - 1) {
+                visibleTweets[visibleIndex + 1]?.focus();
+              } else {
+                // 最後のツイートの場合は最初に戻る
+                visibleTweets[0]?.focus();
+              }
+            } else {
+              // 前のツイートへ
+              if (visibleIndex > 0) {
+                visibleTweets[visibleIndex - 1]?.focus();
+              } else {
+                // 最初のツイートの場合は最後に移動
+                visibleTweets[visibleTweets.length - 1]?.focus();
+              }
+            }
+          } else {
+            // 子ツイートが表示されていない場合は、親ツイート間を移動
+            const parentTweetIndex = parentTweets.indexOf(currentFocus);
+            
+            if (e.key === 'j') {
+              // 次の親ツイートへ
+              if (parentTweetIndex < parentTweets.length - 1) {
+                parentTweets[parentTweetIndex + 1]?.focus();
+              } else {
+                // 最後の親ツイートの場合は最初に戻る
+                parentTweets[0]?.focus();
+              }
+            } else {
+              // 前の親ツイートへ
+              if (parentTweetIndex > 0) {
+                parentTweets[parentTweetIndex - 1]?.focus();
+              } else {
+                // 最初の親ツイートの場合は最後に移動
+                parentTweets[parentTweets.length - 1]?.focus();
+              }
+            }
+          }
         }
-        tweets[currentIndex]?.focus();
         return;
       }
 
@@ -581,12 +820,34 @@
         e.preventDefault();
         const controls = document.querySelector('.controls-info');
         controls.style.display = controls.style.display === 'none' || controls.style.display === '' ? 'flex' : 'none';
+        return;
       }
 
       // ツイートのエクスポート (⌘/Ctrl + Shift + E)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
         exportTweets();
+        return;
+      }
+
+      // JSONエクスポート (⌘/Ctrl + Shift + J)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        exportTweetsAsJson();
+        return;
+      }
+
+      // JSONインポート (⌘/Ctrl + Shift + I)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        importTweetsFromJson();
+        return;
+      }
+
+      // JSONマージ (⌘/Ctrl + Shift + M)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        mergeTweetsFromJson();
         return;
       }
 
@@ -597,13 +858,53 @@
         return;
       }
 
-      // 選択されたツイートの削除 (⌘/Ctrl + D)
-      if (!e.shiftKey && e.key.toLowerCase() === 'd') {
+      // 選択されたツイートの削除 (dキー)
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'd') {
         e.preventDefault();
         const focusedTweet = document.activeElement;
         if (focusedTweet && focusedTweet.classList.contains('tweet')) {
-          deleteTweet(parseInt(focusedTweet.getAttribute('data-index')));
+          if (focusedTweet.classList.contains('child-tweet')) {
+            // 子ツイートの削除
+            const parentIndex = parseInt(focusedTweet.getAttribute('data-parent-index'));
+            const childIndex = parseInt(focusedTweet.getAttribute('data-child-index'));
+            if (!isNaN(parentIndex) && !isNaN(childIndex)) {
+              deleteChildTweet(parentIndex, childIndex);
+            }
+          } else if (!focusedTweet.classList.contains('new-tweet')) {
+            // 親ツイートの削除
+            const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
+            if (!isNaN(actualIndex)) {
+              deleteTweet(actualIndex);
+            }
+          }
         }
+        return;
+      }
+
+      // rキーで選択されたツイートに返信（子ツイート追加）
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        const focusedTweet = document.activeElement;
+        if (focusedTweet && focusedTweet.classList.contains('tweet') && !focusedTweet.classList.contains('new-tweet') && !focusedTweet.classList.contains('child-tweet')) {
+          const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
+          if (!isNaN(actualIndex)) {
+            addChildTweet(actualIndex);
+          }
+        }
+        return;
+      }
+
+      // トグルボタン機能（スペースキー）
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.key === ' ') {
+        e.preventDefault();
+        const focusedTweet = document.activeElement;
+        if (focusedTweet && focusedTweet.classList.contains('tweet') && !focusedTweet.classList.contains('child-tweet') && !focusedTweet.classList.contains('new-tweet')) {
+          const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
+          if (!isNaN(actualIndex)) {
+            toggleChildrenVisibility(actualIndex);
+          }
+        }
+        return;
       }
     });
 
@@ -618,7 +919,8 @@
       if (content) {
         const newTweet = {
           content: content.replace(/\n/g, '<br>'),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          children: [] // 子ツイート配列を初期化
         };
 
         try {
@@ -627,23 +929,26 @@
           await ipcRenderer.invoke('save-tweets', tweetArray);
 
           // 永続化成功後にUIを更新
-          const tweet = document.createElement('div');
-          tweet.className = 'tweet';
-          tweet.setAttribute('data-text', newTweet.content);
-          tweet.setAttribute('data-index', '0'); // 新しいツイートは常にインデックス0
-          tweet.setAttribute('tabindex', '0');
-          tweet.innerHTML = `
-            <span class="content">${newTweet.content}</span>
-            <span class="time">${formatTime(newTweet.timestamp)}</span>
-          `;
-          document.getElementById('tweets').prepend(tweet);
+          const actualIndex = tweetArray.length - 1; // 新しいツイートの実際のインデックス
+          const tweet = createTweetElement(newTweet, 0, actualIndex);
+          
+          // 新規ツイート入力欄の後に挿入
+          const newTweetElement = document.querySelector('.tweet.new-tweet');
+          if (newTweetElement && newTweetElement.nextSibling) {
+            document.getElementById('tweets').insertBefore(tweet, newTweetElement.nextSibling);
+          } else {
+            // フォールバック: 新規ツイート入力欄が見つからない場合は先頭に追加
+            document.getElementById('tweets').prepend(tweet);
+          }
 
           // 既存のツイートのインデックスを更新
-          // todo:なんか効率悪そう
-          const existingTweets = document.querySelectorAll('.tweet:not(:first-child):not(.new-tweet)');
+          const existingTweets = document.querySelectorAll('.tweet:not(.new-tweet):not(.child-tweet)');
           existingTweets.forEach(existingTweet => {
-            const oldIndex = parseInt(existingTweet.getAttribute('data-index'));
-            existingTweet.setAttribute('data-index', oldIndex + 1);
+            // 新しく追加したツイート以外のインデックスを更新
+            if (existingTweet !== tweet) {
+              const oldIndex = parseInt(existingTweet.getAttribute('data-index'));
+              existingTweet.setAttribute('data-index', oldIndex + 1);
+            }
           });
 
           // マトリックスエフェクトを適用
@@ -668,22 +973,16 @@
       const now = new Date();
       const diffMinutes = Math.floor((now - date) / (1000 * 60));
 
+      // 1分未満は「NOW」と表示
       if (diffMinutes < 1) return 'NOW';
-      if (diffMinutes < 60) return `${diffMinutes}M AGO`;
-
-      const diffHours = Math.floor(diffMinutes / 60);
-      if (diffHours < 24) return `${diffHours}H AGO`;
-
-      const diffDays = Math.floor(diffHours / 24);
-      if (diffDays < 7) return `${diffDays}D AGO`;
-
-      return date.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      }).toUpperCase();
+      
+      // 日付と時刻を「mm/dd hh:mm」形式でフォーマット
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      
+      return `${month}/${day} ${hours}:${minutes}`;
     }
 
     let timer;
@@ -738,14 +1037,6 @@
         elem.style.height = newHeight + 'px';
       }
     }
-
-    // DOMContentLoadedイベントでテキストエリアの初期設定
-    window.addEventListener('DOMContentLoaded', () => {
-      const textarea = document.getElementById('tweetInput');
-      textarea.style.height = '80px';
-      // 初期表示時にもautoResizeを実行
-      autoResize(textarea);
-    });
 
     function updateTimerDisplay() {
       if (!running && accumulatedTime === 0) {
@@ -823,29 +1114,608 @@
     });
 
     async function exportTweets() {
-      if (tweetArray.length > 0) {
-        const orderedTweets = tweetArray.map(tweet => {
-          const date = new Date(tweet.timestamp);
-          const formattedDate = date.toLocaleString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-          });
-          return `[${formattedDate}] ${tweet.content}`;
-        }).join('\n');
+      try {
+        let exportText = '';
         
-        try {
-          await navigator.clipboard.writeText(orderedTweets);
-          alert('Tweets copied to clipboard!');
-        } catch (err) {
-          console.error('Failed to copy tweets:', err);
+        // ツイートを新しい順に処理
+        for (let i = tweetArray.length - 1; i >= 0; i--) {
+          const tweet = tweetArray[i];
+          
+          // 親ツイートの内容と時間を追加
+          const tweetDate = new Date(tweet.timestamp);
+          const tweetDateStr = tweetDate.toLocaleString('ja-JP');
+          exportText += `${tweetDateStr}  ${tweet.content.replace(/<br>/g, '\n')}\n\n`;
+          
+          // 子ツイートがあれば追加
+          if (tweet.children && tweet.children.length > 0) {
+            tweet.children.forEach(childTweet => {
+              // 子ツイートの時間とコンテンツを追加
+              const childDate = new Date(childTweet.timestamp);
+              const childDateStr = childDate.toLocaleString('ja-JP');
+              exportText += `\t${childDateStr}  ${childTweet.content.replace(/<br>/g, '\n').replace(/\n/g, '\n\t')}\n\n`;
+            });
+          }
         }
-      } else {
-        alert('No tweets to export!');
+        
+        // クリップボードにコピー - 改善版
+        try {
+          // 非同期APIを使用
+          await navigator.clipboard.writeText(exportText);
+          showMessage('エクスポートに成功しました。');
+        } catch (clipboardErr) {
+          console.error('クリップボードAPIエラー:', clipboardErr);
+          
+          // フォールバック: 一時的なテキストエリアを使用
+          const textArea = document.createElement('textarea');
+          textArea.value = exportText;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+              showMessage('エクスポートに成功しました。');
+            } else {
+              throw new Error('execCommand copy failed');
+            }
+          } catch (execErr) {
+            console.error('execCommand エラー:', execErr);
+            alert('クリップボードへのコピーに失敗しました。');
+          } finally {
+            document.body.removeChild(textArea);
+          }
+        }
+      } catch (error) {
+        console.error('エクスポートエラー:', error);
+        alert('エクスポートに失敗しました。');
+      }
+    }
+
+    // JSONエクスポート機能
+    async function exportTweetsAsJson() {
+      try {
+        const tweets = await ipcRenderer.invoke('export-tweets-json');
+        if (tweets.length === 0) {
+          alert('エクスポートするツイートがありません。');
+          return;
+        }
+
+        // JSONデータを作成
+        const jsonData = JSON.stringify(tweets, null, 2);
+        
+        // Blobを作成
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        
+        // ダウンロードリンクを作成
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // 現在の日時をファイル名に含める
+        const now = new Date();
+        const dateStr = now.toISOString().replace(/[:.]/g, '-').replace('T', '_').split('Z')[0];
+        a.download = `mind_clock_export_${dateStr}.json`;
+        
+        // リンクをクリックしてダウンロード
+        document.body.appendChild(a);
+        a.click();
+        
+        // クリーンアップ
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+        
+        showMessage('JSONファイルがエクスポートされました！');
+      } catch (error) {
+        console.error('JSONエクスポートエラー:', error);
+        alert(`エクスポート中にエラーが発生しました: ${error.message}`);
+      }
+    }
+
+    // JSONインポート機能
+    async function importTweetsFromJson() {
+      try {
+        // ファイル選択ダイアログを表示
+        const fileInput = document.getElementById('jsonFileInput');
+        fileInput.onchange = async (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+          
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            try {
+              const jsonData = JSON.parse(e.target.result);
+              
+              // 確認ダイアログを表示
+              if (confirm('現在のデータを上書きしますか？キャンセルを選択すると、マージモードになります。')) {
+                // インポート（上書き）
+                const importedTweets = await ipcRenderer.invoke('import-tweets-json', jsonData);
+                refreshTweetDisplay(importedTweets);
+                showMessage('JSONデータがインポートされました！');
+              } else {
+                // マージ
+                const mergedTweets = await ipcRenderer.invoke('merge-tweets-json', jsonData);
+                refreshTweetDisplay(mergedTweets);
+                showMessage('JSONデータがマージされました！');
+              }
+            } catch (error) {
+              console.error('JSONパースエラー:', error);
+              alert(`JSONファイルの解析中にエラーが発生しました: ${error.message}`);
+            }
+            
+            // ファイル入力をリセット
+            fileInput.value = '';
+          };
+          reader.readAsText(file);
+        };
+        
+        fileInput.click();
+      } catch (error) {
+        console.error('JSONインポートエラー:', error);
+        alert(`インポート中にエラーが発生しました: ${error.message}`);
+      }
+    }
+
+    // JSONマージ機能
+    async function mergeTweetsFromJson() {
+      try {
+        // ファイル選択ダイアログを表示
+        const fileInput = document.getElementById('jsonFileInput');
+        fileInput.onchange = async (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+          
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            try {
+              const jsonData = JSON.parse(e.target.result);
+              
+              // マージ処理
+              const mergedTweets = await ipcRenderer.invoke('merge-tweets-json', jsonData);
+              refreshTweetDisplay(mergedTweets);
+              showMessage('JSONデータがマージされました！');
+            } catch (error) {
+              console.error('JSONパースエラー:', error);
+              alert(`JSONファイルの解析中にエラーが発生しました: ${error.message}`);
+            }
+            
+            // ファイル入力をリセット
+            fileInput.value = '';
+          };
+          reader.readAsText(file);
+        };
+        
+        fileInput.click();
+      } catch (error) {
+        console.error('JSONマージエラー:', error);
+        alert(`マージ中にエラーが発生しました: ${error.message}`);
+      }
+    }
+
+    // ツイート表示を更新する共通関数
+    function refreshTweetDisplay(tweets) {
+      tweetArray = tweets;
+      const tweetsContainer = document.getElementById('tweets');
+      tweetsContainer.innerHTML = '';
+      
+      // 新規ツイート入力欄を追加（最初に）
+      const newTweetElement = document.createElement('div');
+      newTweetElement.className = 'tweet new-tweet';
+      newTweetElement.setAttribute('tabindex', '0');
+      newTweetElement.innerHTML = `
+        <span class="content">Initialize thought sequence...</span>
+      `;
+      tweetsContainer.appendChild(newTweetElement);
+      
+      // ツイートを表示（新しい順）
+      for (let idx = 0; idx < tweetArray.length; idx++) {
+        const tweetIndex = tweetArray.length - 1 - idx; // 表示順序は逆だが、実際のインデックスを使用
+        const tweet = tweetArray[tweetIndex];
+        
+        // 親ツイートを作成
+        const tweetElement = createTweetElement(tweet, idx, tweetIndex);
+        tweetsContainer.appendChild(tweetElement);
+        
+        // 子ツイートがある場合は子ツイートコンテナを作成
+        if (tweet.children && tweet.children.length > 0) {
+          const childrenContainer = document.createElement('div');
+          childrenContainer.className = 'children-container expanded'; // 基本的に表示状態にする
+          childrenContainer.setAttribute('data-parent-index', tweetIndex);
+          
+          // 子ツイートを表示
+          tweet.children.forEach((childTweet, childIdx) => {
+            const childElement = createChildTweetElement(childTweet, childIdx, tweetIndex);
+            childrenContainer.appendChild(childElement);
+          });
+          
+          // 子ツイートコンテナを親ツイートの後に追加
+          tweetsContainer.insertBefore(childrenContainer, tweetElement.nextSibling);
+          
+          // 親ツイートに子ツイートがあることを示すインジケータを追加
+          const hasChildrenIndicator = document.createElement('span');
+          hasChildrenIndicator.className = 'has-children-indicator';
+          hasChildrenIndicator.textContent = '▼'; // 基本的に開いた状態
+          hasChildrenIndicator.setAttribute('title', '子ツイートを表示/非表示');
+          hasChildrenIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleChildrenVisibility(tweetIndex);
+          });
+          
+          // インジケータを親ツイートのコンテンツの前に追加
+          const contentSpan = tweetElement.querySelector('.content');
+          tweetElement.insertBefore(hasChildrenIndicator, contentSpan);
+        }
+      }
+    }
+
+    // 親ツイート要素を作成する関数
+    function createTweetElement(tweet, displayIndex, actualIndex) {
+      const tweetElement = document.createElement('div');
+      tweetElement.className = 'tweet';
+      tweetElement.setAttribute('data-text', tweet.content);
+      tweetElement.setAttribute('data-index', displayIndex); // 表示順のインデックスを設定（0から始まる）
+      tweetElement.setAttribute('data-actual-index', actualIndex); // 実際のデータ配列のインデックスも保存
+      tweetElement.setAttribute('tabindex', '0');
+      
+      // コンテンツと時間を別々に作成して追加
+      const contentSpan = document.createElement('span');
+      contentSpan.className = 'content';
+      contentSpan.innerHTML = tweet.content; // innerHTMLを使用して<br>タグを正しく解釈
+      
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'time';
+      timeSpan.textContent = formatTime(tweet.timestamp);
+      
+      // アクションボタンを追加
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'tweet-actions';
+      
+      // 返信ボタン
+      const replyButton = document.createElement('span');
+      replyButton.className = 'tweet-action reply-action';
+      replyButton.textContent = '↩';
+      replyButton.setAttribute('title', '返信する');
+      replyButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        addChildTweet(actualIndex);
+      });
+      
+      actionsDiv.appendChild(replyButton);
+      
+      tweetElement.appendChild(contentSpan);
+      tweetElement.appendChild(actionsDiv);
+      tweetElement.appendChild(timeSpan);
+      
+      return tweetElement;
+    }
+
+    // 子ツイート要素を作成する関数
+    function createChildTweetElement(childTweet, childIndex, parentIndex) {
+      const childElement = document.createElement('div');
+      childElement.className = 'tweet child-tweet';
+      childElement.setAttribute('data-text', childTweet.content);
+      childElement.setAttribute('data-child-index', childIndex);
+      childElement.setAttribute('data-parent-index', parentIndex);
+      childElement.setAttribute('tabindex', '0');
+      
+      // 子ツイートのインジケータ
+      const childIndicator = document.createElement('span');
+      childIndicator.className = 'child-indicator';
+      childIndicator.textContent = '↪';
+      
+      // コンテンツと時間を別々に作成して追加
+      const contentSpan = document.createElement('span');
+      contentSpan.className = 'content';
+      contentSpan.innerHTML = childTweet.content;
+      
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'time';
+      timeSpan.textContent = formatTime(childTweet.timestamp);
+      
+      childElement.appendChild(childIndicator);
+      childElement.appendChild(contentSpan);
+      childElement.appendChild(timeSpan);
+      
+      return childElement;
+    }
+
+    // 子ツイートの表示/非表示を切り替える関数
+    function toggleChildrenVisibility(parentIndex) {
+      const childrenContainer = document.querySelector(`.children-container[data-parent-index="${parentIndex}"]`);
+      if (childrenContainer) {
+        childrenContainer.classList.toggle('expanded');
+        
+        // インジケータの向きを変更
+        const parentTweet = document.querySelector(`.tweet[data-actual-index="${parentIndex}"]`);
+        const indicator = parentTweet.querySelector('.has-children-indicator');
+        if (indicator) {
+          indicator.textContent = childrenContainer.classList.contains('expanded') ? '▼' : '▶';
+        }
+      }
+    }
+
+    // 子ツイートを追加する関数
+    async function addChildTweet(parentIndex) {
+      const parentTweet = document.querySelector(`.tweet[data-actual-index="${parentIndex}"]`);
+      if (!parentTweet) return;
+      
+      // 子ツイート入力用の要素を作成
+      const childInputElement = document.createElement('div');
+      childInputElement.className = 'tweet child-tweet editing';
+      childInputElement.setAttribute('data-parent-index', parentIndex);
+      
+      // 子ツイートのインジケータ
+      const childIndicator = document.createElement('span');
+      childIndicator.className = 'child-indicator';
+      childIndicator.textContent = '↪';
+      
+      // 編集可能なコンテンツ要素
+      const contentSpan = document.createElement('span');
+      contentSpan.className = 'content';
+      contentSpan.contentEditable = true;
+      contentSpan.textContent = '';
+      
+      childInputElement.appendChild(childIndicator);
+      childInputElement.appendChild(contentSpan);
+      
+      // 子ツイートコンテナを取得または作成
+      let childrenContainer = document.querySelector(`.children-container[data-parent-index="${parentIndex}"]`);
+      if (!childrenContainer) {
+        childrenContainer = document.createElement('div');
+        childrenContainer.className = 'children-container';
+        childrenContainer.setAttribute('data-parent-index', parentIndex);
+        
+        // 親ツイートの後に子ツイートコンテナを挿入
+        parentTweet.parentNode.insertBefore(childrenContainer, parentTweet.nextSibling);
+        
+        // 親ツイートに子ツイートがあることを示すインジケータを追加（まだなければ）
+        if (!parentTweet.querySelector('.has-children-indicator')) {
+          const hasChildrenIndicator = document.createElement('span');
+          hasChildrenIndicator.className = 'has-children-indicator';
+          hasChildrenIndicator.textContent = '▶';
+          hasChildrenIndicator.setAttribute('title', '子ツイートを表示/非表示');
+          hasChildrenIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleChildrenVisibility(parentIndex);
+          });
+          
+          // インジケータを親ツイートのコンテンツの前に追加
+          const contentSpan = parentTweet.querySelector('.content');
+          parentTweet.insertBefore(hasChildrenIndicator, contentSpan);
+        }
+      }
+      
+      // 子ツイートコンテナを表示
+      childrenContainer.classList.add('expanded');
+      
+      // インジケータの向きを変更
+      const indicator = parentTweet.querySelector('.has-children-indicator');
+      if (indicator) {
+        indicator.textContent = '▼';
+      }
+      
+      // 子ツイート入力要素を子ツイートコンテナの先頭に追加
+      childrenContainer.insertBefore(childInputElement, childrenContainer.firstChild);
+      
+      // フォーカスを設定
+      contentSpan.focus();
+      
+      // IME入力状態を追跡
+      let isComposing = false;
+      
+      // IME入力開始イベントのリスナー
+      const handleCompositionStart = () => {
+        isComposing = true;
+      };
+      
+      // IME入力終了イベントのリスナー
+      const handleCompositionEnd = () => {
+        isComposing = false;
+      };
+      
+      // 編集完了のイベントリスナー
+      const handleEditKeypress = async (e) => {
+        // cmd + enterで保存
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !isComposing) {
+          e.preventDefault();
+          e.stopPropagation();
+          const newContent = contentSpan.textContent.trim();
+          
+          if (newContent) {
+            try {
+              // 子ツイートを追加
+              const childTweet = {
+                content: newContent.replace(/\n/g, '<br>'),
+                timestamp: new Date().toISOString()
+              };
+              
+              // バックエンドに子ツイートを追加
+              tweetArray = await ipcRenderer.invoke('add-child-tweet', parentIndex, childTweet);
+              
+              // 編集モードを終了
+              finishEditing();
+              
+              // ツイート一覧を再描画
+              refreshTweetDisplay(tweetArray);
+            } catch (error) {
+              console.error('Failed to add child tweet:', error);
+              finishEditing();
+            }
+          } else {
+            finishEditing();
+          }
+        } else if (e.key === 'Escape') {
+          // 編集をキャンセル
+          e.preventDefault();
+          e.stopPropagation();
+          finishEditing();
+        }
+      };
+      
+      // 編集モード終了時の共通処理
+      const finishEditing = () => {
+        document.removeEventListener('keydown', handleEditKeypress);
+        contentSpan.removeEventListener('compositionstart', handleCompositionStart);
+        contentSpan.removeEventListener('compositionend', handleCompositionEnd);
+        
+        // 入力要素を削除
+        if (childInputElement.parentNode) {
+          childInputElement.parentNode.removeChild(childInputElement);
+        }
+        
+        // 子ツイートがない場合は子ツイートコンテナとインジケータを削除
+        const existingChildTweets = childrenContainer.querySelectorAll('.tweet.child-tweet:not(.editing)');
+        if (existingChildTweets.length === 0) {
+          // 子ツイートコンテナを削除
+          if (childrenContainer.parentNode) {
+            childrenContainer.parentNode.removeChild(childrenContainer);
+          }
+          
+          // インジケータを削除
+          if (indicator) {
+            indicator.parentNode.removeChild(indicator);
+          }
+        }
+      };
+      
+      // イベントリスナーを追加
+      document.addEventListener('keydown', handleEditKeypress);
+      contentSpan.addEventListener('compositionstart', handleCompositionStart);
+      contentSpan.addEventListener('compositionend', handleCompositionEnd);
+    }
+
+    // 子ツイートを編集する関数
+    async function editChildTweet(parentIndex, childIndex) {
+      const childTweet = document.querySelector(`.tweet.child-tweet[data-parent-index="${parentIndex}"][data-child-index="${childIndex}"]`);
+      if (!childTweet) return;
+      
+      const contentSpan = childTweet.querySelector('.content');
+      const originalContent = contentSpan.innerHTML.replace(/<br>/g, '\n');
+      let isComposing = false;
+      
+      // 編集モードに入る
+      childTweet.classList.add('editing');
+      contentSpan.contentEditable = true;
+      contentSpan.textContent = originalContent;
+      contentSpan.focus();
+      
+      // IME入力開始イベントのリスナー
+      const handleCompositionStart = () => {
+        isComposing = true;
+      };
+      
+      // IME入力終了イベントのリスナー
+      const handleCompositionEnd = () => {
+        isComposing = false;
+      };
+      
+      // 編集完了のイベントリスナー
+      const handleEditKeypress = async (e) => {
+        // cmd + enterで保存
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !isComposing) {
+          e.preventDefault();
+          e.stopPropagation();
+          const newContent = contentSpan.textContent.trim();
+          
+          if (newContent !== originalContent) {
+            try {
+              // 子ツイートの内容を更新
+              tweetArray = await ipcRenderer.invoke('edit-child-tweet', parentIndex, childIndex, newContent.replace(/\n/g, '<br>'));
+              
+              // 表示を更新
+              contentSpan.innerHTML = newContent.replace(/\n/g, '<br>');
+              contentSpan.contentEditable = false;
+              childTweet.classList.remove('editing');
+              childTweet.focus();
+            } catch (error) {
+              console.error('Failed to edit child tweet:', error);
+              // エラー時は元の内容に戻す
+              contentSpan.innerHTML = originalContent;
+              finishEditing();
+            }
+          } else {
+            finishEditing();
+          }
+        } else if (e.key === 'Escape') {
+          // 編集をキャンセル
+          e.preventDefault();
+          e.stopPropagation();
+          contentSpan.innerHTML = originalContent;
+          finishEditing();
+        }
+      };
+      
+      // 編集モード終了時の共通処理
+      const finishEditing = () => {
+        contentSpan.contentEditable = false;
+        childTweet.classList.remove('editing');
+        childTweet.focus();
+        document.removeEventListener('keydown', handleEditKeypress);
+        contentSpan.removeEventListener('compositionstart', handleCompositionStart);
+        contentSpan.removeEventListener('compositionend', handleCompositionEnd);
+      };
+      
+      // イベントリスナーを追加
+      document.addEventListener('keydown', handleEditKeypress);
+      contentSpan.addEventListener('compositionstart', handleCompositionStart);
+      contentSpan.addEventListener('compositionend', handleCompositionEnd);
+    }
+
+    // 子ツイートを削除する関数
+    async function deleteChildTweet(parentIndex, childIndex) {
+      const childTweet = document.querySelector(`.tweet.child-tweet[data-parent-index="${parentIndex}"][data-child-index="${childIndex}"]`);
+      if (!childTweet) return;
+      
+      if (!childTweet.classList.contains('confirm')) {
+        // 最初の確認時
+        childTweet.classList.add('confirm');
+        childTweet.style.background = 'rgba(255, 0, 0, 0.1)';
+        
+        // キーボードイベントリスナーを追加
+        const handleDeleteKeypress = async (e) => {
+          if (e.key === 'Enter') {
+            // Enterキーで削除実行
+            document.removeEventListener('keydown', handleDeleteKeypress);
+            document.removeEventListener('focusin', handleOtherFocus);
+            
+            try {
+              // 子ツイートを削除
+              tweetArray = await ipcRenderer.invoke('delete-child-tweet', parentIndex, childIndex);
+              
+              // ツイート一覧を再描画
+              refreshTweetDisplay(tweetArray);
+            } catch (error) {
+              console.error('Failed to delete child tweet:', error);
+              childTweet.classList.remove('confirm');
+              childTweet.style.background = '';
+            }
+          } else if (e.key === 'Escape') {
+            // Escキーでキャンセル
+            document.removeEventListener('keydown', handleDeleteKeypress);
+            document.removeEventListener('focusin', handleOtherFocus);
+            childTweet.classList.remove('confirm');
+            childTweet.style.background = '';
+          }
+        };
+        
+        document.addEventListener('keydown', handleDeleteKeypress);
+        
+        // 他のツイートがフォーカスされた時のイベントリスナー
+        const handleOtherFocus = (e) => {
+          if (e.target.classList.contains('tweet') && e.target !== childTweet) {
+            document.removeEventListener('keydown', handleDeleteKeypress);
+            document.removeEventListener('focusin', handleOtherFocus);
+            childTweet.classList.remove('confirm');
+            childTweet.style.background = '';
+          }
+        };
+        
+        document.addEventListener('focusin', handleOtherFocus);
       }
     }
 
@@ -853,8 +1723,12 @@
       const focusedTweet = document.activeElement;
       if (!focusedTweet || !focusedTweet.classList.contains('tweet')) return;
       
-      // 現在のインデックスを取得（表示順序の逆順を考慮）
-      const currentIndex = tweetArray.length - 1 - parseInt(focusedTweet.getAttribute('data-index'));
+      // data-actual-index属性から実際のデータ配列内のインデックスを取得
+      const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
+      if (isNaN(actualIndex)) {
+        console.error('Invalid tweet index');
+        return;
+      }
       
       if (!focusedTweet.classList.contains('confirm')) {
         // 最初の確認時
@@ -866,10 +1740,12 @@
           if (e.key === 'Enter') {
             // Enterキーで削除実行
             document.removeEventListener('keydown', handleDeleteKeypress);
-            await executeDelete(currentIndex);
+            document.removeEventListener('focusin', handleOtherFocus);
+            await executeDelete(actualIndex);
           } else if (e.key === 'Escape') {
             // Escキーでキャンセル
             document.removeEventListener('keydown', handleDeleteKeypress);
+            document.removeEventListener('focusin', handleOtherFocus);
             focusedTweet.classList.remove('confirm');
             focusedTweet.style.background = '';
           }
@@ -895,22 +1771,21 @@
 
     async function executeDelete(index) {
       try {
-        tweetArray = await ipcRenderer.invoke('delete-tweet', index);
+        // フォーカスされているツイート要素を取得
+        const focusedTweet = document.activeElement;
+        if (!focusedTweet || !focusedTweet.classList.contains('tweet')) return;
+        
+        // data-actual-index属性から実際のデータ配列内のインデックスを取得
+        const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
+        
+        if (isNaN(actualIndex)) {
+          console.error('Invalid tweet index');
+          return;
+        }
+        
+        tweetArray = await ipcRenderer.invoke('delete-tweet', actualIndex);
         // ツイート一覧を再描画
-        const tweetsContainer = document.getElementById('tweets');
-        tweetsContainer.innerHTML = '';
-        tweetArray.forEach((tweet, idx) => {
-          const tweetElement = document.createElement('div');
-          tweetElement.className = 'tweet';
-          tweetElement.setAttribute('data-text', tweet.content);
-          tweetElement.setAttribute('data-index', tweetArray.length - 1 - idx); // 表示順序の逆順を考慮
-          tweetElement.setAttribute('tabindex', '0');
-          tweetElement.innerHTML = `
-            <span class="content">${tweet.content}</span>
-            <span class="time">${formatTime(tweet.timestamp)}</span>
-          `;
-          tweetsContainer.prepend(tweetElement);
-        });
+        refreshTweetDisplay(tweetArray);
       } catch (error) {
         console.error('Failed to delete tweet:', error);
       }
@@ -958,6 +1833,13 @@
       const focusedTweet = document.activeElement;
       if (!focusedTweet || !focusedTweet.classList.contains('tweet')) return;
       
+      // data-actual-index属性から実際のデータ配列内のインデックスを取得
+      const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
+      if (isNaN(actualIndex)) {
+        console.error('Invalid tweet index');
+        return;
+      }
+      
       const contentSpan = focusedTweet.querySelector('.content');
       const originalContent = contentSpan.innerHTML.replace(/<br>/g, '\n');
       let isComposing = false;
@@ -987,11 +1869,8 @@
           const newContent = contentSpan.textContent.trim();
 
           if (newContent !== originalContent) {
-            // 現在のインデックスを取得（表示順序の逆順を考慮）
-            const currentIndex = tweetArray.length - 1 - index;
-
             // ツイートの内容を更新
-            tweetArray[currentIndex].content = newContent.replace(/\n/g, '<br>');
+            tweetArray[actualIndex].content = newContent.replace(/\n/g, '<br>');
 
             // 保存
             try {
@@ -1095,7 +1974,7 @@
         }
       };
 
-      // 編集モード終了時の共通処理
+      // 新規ツイート入力モード終了時の共通処理
       const finishNewTweetEditing = () => {
         contentSpan.contentEditable = false;
         tweetElement.classList.remove('editing');
