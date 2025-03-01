@@ -502,8 +502,9 @@
 
       // 編集モード中はj,kキーの移動を無効化
       // iy:ここにiも入れれば良いのでは
+      // iy:dも入れる
       const isEditing = document.querySelector('.tweet.editing') !== null;
-      if (isEditing && (e.key === 'j' || e.key === 'k' || e.key === 'i')) {
+      if (isEditing && (e.key === 'j' || e.key === 'k' || e.key === 'i' || e.key === 'd')) {
         return;
       }
 
