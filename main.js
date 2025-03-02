@@ -63,10 +63,38 @@ ipcMain.handle("load-tweets", async () => {
 });
 
 ipcMain.handle("delete-tweet", async (event, index) => {
-  const tweets = store.get("tweets", []);
-  tweets.splice(index, 1);
-  store.set("tweets", tweets);
-  return tweets;
+  try {
+    const tweets = store.get("tweets", []);
+    
+    // インデックスの妥当性チェック
+    if (index < 0 || index >= tweets.length) {
+      throw new Error(`Invalid tweet index: ${index}`);
+    }
+
+    // 削除前のバックアップを作成
+    const backupTweets = [...tweets];
+    
+    // 削除対象のツイートを取得（ログ用）
+    const targetTweet = tweets[index];
+    
+    // ツイートを削除
+    tweets.splice(index, 1);
+    
+    try {
+      // 永続化
+      store.set("tweets", tweets);
+      console.log(`Tweet deleted successfully. Index: ${index}, Content: ${targetTweet.content}`);
+      return tweets;
+    } catch (saveError) {
+      // 永続化に失敗した場合は元に戻す
+      console.error('Failed to save tweets after deletion:', saveError);
+      store.set("tweets", backupTweets);
+      throw new Error('Failed to save tweets after deletion');
+    }
+  } catch (error) {
+    console.error('Error in delete-tweet handler:', error);
+    throw error;
+  }
 });
 
 // 子ツイートを追加する処理
@@ -88,8 +116,8 @@ ipcMain.handle("add-child-tweet", async (event, parentIndex, childTweet) => {
     childTweet.timestamp = new Date().toISOString();
   }
   
-  // 子ツイートを親ツイートの子ツイート配列に追加
-  tweets[parentIndex].children.push(childTweet);
+  // 子ツイートを親ツイートの子ツイート配列の先頭に追加（新→古の順序を維持）
+  tweets[parentIndex].children.unshift(childTweet);
   
   // 更新したツイート配列を保存
   store.set("tweets", tweets);
@@ -99,30 +127,48 @@ ipcMain.handle("add-child-tweet", async (event, parentIndex, childTweet) => {
 
 // 子ツイートを削除する処理
 ipcMain.handle("delete-child-tweet", async (event, parentIndex, childIndex) => {
-  const tweets = store.get("tweets", []);
-  
-  // 親ツイートが存在するか確認
-  if (parentIndex < 0 || parentIndex >= tweets.length) {
-    throw new Error("Parent tweet not found");
+  try {
+    const tweets = store.get("tweets", []);
+    
+    // 親ツイートが存在するか確認
+    if (parentIndex < 0 || parentIndex >= tweets.length) {
+      throw new Error("Parent tweet not found");
+    }
+    
+    // 親ツイートに子ツイート配列があるか確認
+    if (!tweets[parentIndex].children || !Array.isArray(tweets[parentIndex].children)) {
+      throw new Error("Child tweets array not found");
+    }
+    
+    // 子ツイートが存在するか確認
+    if (childIndex < 0 || childIndex >= tweets[parentIndex].children.length) {
+      throw new Error("Child tweet not found");
+    }
+
+    // 削除前のバックアップを作成
+    const backupTweets = JSON.parse(JSON.stringify(tweets));
+    
+    // 削除対象の子ツイートを取得（ログ用）
+    const targetChildTweet = tweets[parentIndex].children[childIndex];
+    
+    // 子ツイートを削除
+    tweets[parentIndex].children.splice(childIndex, 1);
+    
+    try {
+      // 永続化
+      store.set("tweets", tweets);
+      console.log(`Child tweet deleted successfully. Parent index: ${parentIndex}, Child index: ${childIndex}, Content: ${targetChildTweet.content}`);
+      return tweets;
+    } catch (saveError) {
+      // 永続化に失敗した場合は元に戻す
+      console.error('Failed to save tweets after child deletion:', saveError);
+      store.set("tweets", backupTweets);
+      throw new Error('Failed to save tweets after child deletion');
+    }
+  } catch (error) {
+    console.error('Error in delete-child-tweet handler:', error);
+    throw error;
   }
-  
-  // 親ツイートに子ツイート配列があるか確認
-  if (!tweets[parentIndex].children || !Array.isArray(tweets[parentIndex].children)) {
-    throw new Error("Child tweets array not found");
-  }
-  
-  // 子ツイートが存在するか確認
-  if (childIndex < 0 || childIndex >= tweets[parentIndex].children.length) {
-    throw new Error("Child tweet not found");
-  }
-  
-  // 子ツイートを削除
-  tweets[parentIndex].children.splice(childIndex, 1);
-  
-  // 更新したツイート配列を保存
-  store.set("tweets", tweets);
-  
-  return tweets;
 });
 
 // 子ツイートを編集する処理
@@ -163,6 +209,11 @@ ipcMain.handle("export-tweets-json", async () => {
   const tweets = store.get("tweets", []);
   return tweets;
 });
+
+// 子ツイートを時系列順にソートする関数（新→古）
+function sortChildTweets(children) {
+  return children.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+}
 
 // JSONインポート機能
 ipcMain.handle("import-tweets-json", async (event, importedTweets) => {
@@ -206,6 +257,9 @@ ipcMain.handle("import-tweets-json", async (event, importedTweets) => {
             timestamp: childTimestamp
           };
         }).filter(child => child !== null); // nullの子ツイートを除外
+        
+        // 子ツイートを時系列順にソート（新→古）
+        children = sortChildTweets(children);
       }
       
       return {
@@ -323,8 +377,8 @@ ipcMain.handle("merge-tweets-json", async (event, importedTweets) => {
     // マップから配列に変換
     const mergedTweets = Array.from(uniqueTweets.values());
     
-    // タイムスタンプでソート（新しい順）
-    mergedTweets.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    // タイムスタンプでソート（古い順）- 表示時に逆順にするため
+    mergedTweets.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     
     // マージされたツイートを保存
     store.set("tweets", mergedTweets);

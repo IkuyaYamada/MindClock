@@ -387,6 +387,28 @@
         opacity: 0;
       }
     }
+    @keyframes matrix-effect {
+      0% {
+        background-color: rgba(0, 255, 0, 0);
+        text-shadow: 0 0 0px rgba(0, 255, 0, 0);
+      }
+      25% {
+        background-color: rgba(0, 255, 0, 0.2);
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+      }
+      50% {
+        background-color: rgba(255, 204, 0, 0.3);
+        text-shadow: 0 0 15px rgba(255, 204, 0, 1);
+      }
+      75% {
+        background-color: rgba(255, 204, 0, 0.2);
+        text-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+      }
+      100% {
+        background-color: rgba(255, 204, 0, 0.1);
+        text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+      }
+    }
     .tweet.matrix-effect::before {
       content: '';
       position: absolute;
@@ -395,6 +417,25 @@
       width: 100%;
       height: 100%;
       background: linear-gradient(180deg, rgba(0, 255, 0, 0.5) 0%, transparent 100%);
+      animation: matrix-rain 1s linear;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .tweet.mind-hook-matrix-effect {
+      animation: matrix-effect 1s ease-in-out;
+    }
+    .tweet.mind-hook-matrix-effect .content {
+      position: relative;
+      z-index: 2;
+    }
+    .tweet.mind-hook-matrix-effect::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(255, 204, 0, 0.5) 0%, transparent 100%);
       animation: matrix-rain 1s linear;
       pointer-events: none;
       z-index: 1;
@@ -499,85 +540,115 @@
       font-size: 16px;
       text-shadow: 0 0 5px rgba(255, 255, 0, 0.7);
     }
+    
+    /* マインドフック関連のスタイル */
+    .tweet.mind-hooked {
+      border-left: 5px solid #ffcc00 !important;
+      background-color: rgba(255, 204, 0, 0.15) !important;
+      box-shadow: 0 0 15px rgba(255, 204, 0, 0.5) !important;
+      position: relative;
+    }
+    
+    .tweet.mind-hooked::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 1px solid rgba(255, 204, 0, 0.5);
+      pointer-events: none;
+    }
+    
+    .tweet.mind-hooked .content {
+      color: #ffcc00 !important;
+      text-shadow: 0 0 2px rgba(255, 204, 0, 0.3);
+    }
+    
+    .tweet.mind-hooked:hover,
+    .tweet.mind-hooked:focus {
+      background-color: rgba(255, 204, 0, 0.2) !important;
+      box-shadow: 0 0 20px rgba(255, 204, 0, 0.6) !important;
+    }
+    
+    /* マインドフックインジケータのスタイル */
+    .mind-hook-indicator {
+      display: inline-block;
+      margin-right: 8px;
+      color: #ffcc00;
+      font-size: 1.2em;
+      text-shadow: 0 0 5px rgba(255, 204, 0, 0.7);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+    
+    /* マインドフックカウントとボタンのスタイル */
+    .mind-hook-count {
+      display: inline-block;
+      margin-left: 5px;
+      font-size: 12px;
+      color: #ffcc00;
+    }
+    
+    .mind-hook-btn {
+      position: relative;
+    }
+    
+    .mind-hook-btn .mind-hook-count {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ffcc00;
+      color: #000;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+    
+    /* マトリックスエフェクト */
+    .matrix-effect {
+      animation: matrixEffect 1s;
+    }
+    
+    @keyframes matrixEffect {
+      0% {
+        text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 15px #00ff00;
+        box-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 15px #00ff00;
+      }
+      100% {
+        text-shadow: none;
+        box-shadow: none;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="controls-info" style="display: none; flex-direction: column; gap: 10px;">
-    <h3 style="color: #0f0; text-align: center; margin-bottom: 10px;">キーボードショートカット</h3>
-    
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-      <div class="shortcut-group">
-        <span class="key">j</span>
-        <span>次のツイートへ移動</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">k</span>
-        <span>前のツイートへ移動</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">i</span>
-        <span>選択中のツイートを編集</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">d</span>
-        <span>選択中のツイートを削除</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">o</span>
-        <span>選択中のツイートに返信（子ツイート追加）</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">space</span>
-        <span>選択中のツイートの子ツイート表示/非表示</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">n</span>
-        <span>新規ツイート入力</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">enter</span>
-        <span>ツイート投稿/編集完了</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">esc</span>
-        <span>編集キャンセル</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">s</span>
-        <span>タイマー開始/停止</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">s</span>
-        <span>タイマーリセット</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">e</span>
-        <span>ツイートをテキストとしてエクスポート</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">j</span>
-        <span>ツイートをJSONとしてエクスポート</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">i</span>
-        <span>JSONからツイートをインポート</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">m</span>
-        <span>JSONからツイートをマージ</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">shift</span><span class="key-separator">+</span><span class="key">d</span>
-        <span>全ツイート削除</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">⌘</span><span class="key-separator">+</span><span class="key">?</span>
-        <span>このヘルプを表示/非表示</span>
-      </div>
-      <div class="shortcut-group">
-        <span class="key">f</span>
-        <span>選択中のツイートをフォーカス/フォーカス解除</span>
-      </div>
+  <div class="controls-info" style="display: none;">
+    <div class="shortcuts">
+      <h3>キーボードショートカット</h3>
+      <ul>
+        <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> - ツイートを投稿</li>
+        <li><kbd>e</kbd> - 選択したツイートを編集</li>
+        <li><kbd>d</kbd> - 選択したツイートを削除</li>
+        <li><kbd>o</kbd> - 選択したツイートに返信（子ツイート追加）</li>
+        <li><kbd>Space</kbd> - 子ツイートの表示/非表示を切り替え</li>
+        <li><kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> - ツイート間を移動</li>
+        <li><kbd>↑</kbd> / <kbd>↓</kbd> - ツイート間を移動</li>
+        <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd> - エクスポート</li>
+        <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>J</kbd> - JSONエクスポート</li>
+        <li><kbd>f</kbd> - 選択したツイートをマインドフック</li>
+        <li><kbd>Alt</kbd> + <kbd>↑</kbd> / <kbd>Alt</kbd> + <kbd>↓</kbd> - マインドフックされたツイート間を移動</li>
+      </ul>
     </div>
   </div>
   <h1>Mind Clock</h1>
@@ -599,7 +670,7 @@
     <button id="mergeJsonBtn" title="Merge with JSON">Merge JSON</button>
     <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
     <button id="toggleControlsBtn" title="Toggle shortcuts (Ctrl+?)">Shortcuts</button>
-    <button id="focusBtn" title="Focus on selected tweet (Ctrl+F)">Focus</button>
+    <button id="mindHookBtn" class="mind-hook-btn" title="Mind Hook selected tweet (F key)">Mind Hook<span class="mind-hook-count" style="display: none;">0</span></button>
   </div>
 
   <div class="modal-overlay">
@@ -675,12 +746,11 @@
           const firstTweet = document.querySelector('.tweet:not(.child-tweet):not(.new-tweet)');
           if (firstTweet) {
             firstTweet.focus();
-            console.log('Focus moved to first tweet');
           }
         }
         
-        // フォーカス機能を実行
-        toggleFocusOnTweet();
+        // フォーカス機能の代わりにマインドフック機能を実行
+        toggleMindHookOnTweet();
       });
       
       // 全削除ボタンのイベントリスナー
@@ -695,6 +765,26 @@
     document.addEventListener('keydown', (e) => {
       // 編集中の場合はショートカットを無効化
       if (isEditing() && e.key !== 'Escape') {
+        return;
+      }
+
+      // マインドフック機能のショートカット (f)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        console.log('Mind hook shortcut triggered from main listener');
+        
+        // 現在フォーカスされているツイートがない場合は、最初のツイートにフォーカスを移動
+        const currentFocus = document.activeElement;
+        if (!currentFocus || (!currentFocus.classList.contains('tweet') && !currentFocus.classList.contains('child-tweet'))) {
+          const firstTweet = document.querySelector('.tweet:not(.new-tweet)');
+          if (firstTweet) {
+            firstTweet.focus();
+            console.log('Focus moved to first tweet by shortcut');
+          }
+        }
+        
+        // マインドフック機能を実行
+        toggleMindHookOnTweet();
         return;
       }
 
@@ -810,25 +900,6 @@
         return;
       }
 
-      // フォーカス機能のショートカット (f)
-      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key === 'f') {
-        e.preventDefault();
-        console.log('Focus shortcut triggered');
-        
-        // 現在フォーカスされているツイートがない場合は、最初のツイートにフォーカスを移動
-        const currentFocus = document.activeElement;
-        if (!currentFocus || !currentFocus.classList.contains('tweet') || currentFocus.classList.contains('child-tweet') || currentFocus.classList.contains('new-tweet')) {
-          const firstTweet = document.querySelector('.tweet:not(.child-tweet):not(.new-tweet)');
-          if (firstTweet) {
-            firstTweet.focus();
-            console.log('Focus moved to first tweet by shortcut');
-          }
-        }
-        
-        toggleFocusOnTweet();
-        return;
-      }
-
       // タイマーの開始/停止 (⌘/Ctrl + S)
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 's') {
         e.preventDefault(); // デフォルトの保存動作を防ぐ
@@ -840,6 +911,13 @@
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
         resetTimer();
+        return;
+      }
+
+      // JSONエクスポート (⌘/Ctrl + Shift + J)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        exportTweetsAsJson();
         return;
       }
 
@@ -879,7 +957,7 @@
         return;
       }
 
-      // j,kキーでの移動
+      // j,kキーでの移動 - この重複したイベントハンドラを削除します
       if (!e.ctrlKey && !e.metaKey && !e.shiftKey && (e.key === 'j' || e.key === 'k')) {
         e.preventDefault();
         const allTweets = Array.from(document.querySelectorAll('.tweet'));
@@ -935,59 +1013,9 @@
                 visibleTweets[visibleTweets.length - 1]?.focus();
               }
             }
-          } else {
+          
             // 子ツイートが表示されていない場合は、親ツイート間を移動
             const parentTweetIndex = parentTweets.indexOf(parentTweet);
-            
-            if (e.key === 'j') {
-              // 次の親ツイートへ
-              if (parentTweetIndex < parentTweets.length - 1) {
-                parentTweets[parentTweetIndex + 1]?.focus();
-              } else {
-                // 最後の親ツイートの場合は最初に戻る
-                parentTweets[0]?.focus();
-              }
-            } else {
-              // 前の親ツイートへ
-              if (parentTweetIndex > 0) {
-                parentTweets[parentTweetIndex - 1]?.focus();
-              } else {
-                // 最初の親ツイートの場合は最後に移動
-                parentTweets[parentTweets.length - 1]?.focus();
-              }
-            }
-          }
-        } else {
-          // 親ツイートの場合
-          // この親ツイートの子ツイートコンテナが展開されているかチェック
-          const actualIndex = parseInt(currentFocus.getAttribute('data-actual-index'));
-          const childrenContainer = document.querySelector(`.children-container[data-parent-index="${actualIndex}"]`);
-          const isExpanded = childrenContainer && childrenContainer.classList.contains('expanded');
-          
-          if (isExpanded && childrenContainer.querySelectorAll('.tweet.child-tweet').length > 0) {
-            // 子ツイートが表示されている場合は、表示されているすべてのツイート間を移動
-            const visibleIndex = visibleTweets.indexOf(currentFocus);
-            
-            if (e.key === 'j') {
-              // 次のツイートへ（自分の子ツイートへ）
-              if (visibleIndex < visibleTweets.length - 1) {
-                visibleTweets[visibleIndex + 1]?.focus();
-              } else {
-                // 最後のツイートの場合は最初に戻る
-                visibleTweets[0]?.focus();
-              }
-            } else {
-              // 前のツイートへ
-              if (visibleIndex > 0) {
-                visibleTweets[visibleIndex - 1]?.focus();
-              } else {
-                // 最初のツイートの場合は最後に移動
-                visibleTweets[visibleTweets.length - 1]?.focus();
-              }
-            }
-          } else {
-            // 子ツイートが表示されていない場合は、親ツイート間を移動
-            const parentTweetIndex = parentTweets.indexOf(currentFocus);
             
             if (e.key === 'j') {
               // 次の親ツイートへ
@@ -1837,7 +1865,10 @@
     // 子ツイートを削除する関数
     async function deleteChildTweet(parentIndex, childIndex) {
       const childTweet = document.querySelector(`.tweet.child-tweet[data-parent-index="${parentIndex}"][data-child-index="${childIndex}"]`);
-      if (!childTweet) return;
+      if (!childTweet) {
+        console.error('Child tweet element not found');
+        return;
+      }
       
       if (!childTweet.classList.contains('confirm')) {
         // 最初の確認時
@@ -1852,15 +1883,26 @@
             document.removeEventListener('focusin', handleOtherFocus);
             
             try {
+              // 削除前の状態を保存
+              const tweetBackup = [...tweetArray];
+              
               // 子ツイートを削除
               tweetArray = await ipcRenderer.invoke('delete-child-tweet', parentIndex, childIndex);
               
               // ツイート一覧を再描画
               refreshTweetDisplay(tweetArray);
+              
+              // 削除成功のメッセージを表示
+              showMessage('子ツイートを削除しました');
             } catch (error) {
               console.error('Failed to delete child tweet:', error);
-              childTweet.classList.remove('confirm');
-              childTweet.style.background = '';
+              
+              // エラーが発生した場合は元の状態に戻す
+              tweetArray = tweetBackup;
+              refreshTweetDisplay(tweetArray);
+              
+              // エラーメッセージを表示
+              showMessage('子ツイートの削除に失敗しました');
             }
           } else if (e.key === 'Escape') {
             // Escキーでキャンセル
@@ -1941,7 +1983,10 @@
       try {
         // フォーカスされているツイート要素を取得
         const focusedTweet = document.activeElement;
-        if (!focusedTweet || !focusedTweet.classList.contains('tweet')) return;
+        if (!focusedTweet || !focusedTweet.classList.contains('tweet')) {
+          console.error('No tweet focused for deletion');
+          return;
+        }
         
         // data-actual-index属性から実際のデータ配列内のインデックスを取得
         const actualIndex = parseInt(focusedTweet.getAttribute('data-actual-index'));
@@ -1950,12 +1995,32 @@
           console.error('Invalid tweet index');
           return;
         }
+
+        // 削除前の状態を保存
+        const tweetBackup = [...tweetArray];
         
-        tweetArray = await ipcRenderer.invoke('delete-tweet', actualIndex);
-        // ツイート一覧を再描画
-        refreshTweetDisplay(tweetArray);
+        try {
+          // ツイートを削除
+          tweetArray = await ipcRenderer.invoke('delete-tweet', actualIndex);
+          
+          // ツイート一覧を再描画
+          refreshTweetDisplay(tweetArray);
+          
+          // 削除成功のメッセージを表示
+          showMessage('ツイートを削除しました');
+        } catch (error) {
+          console.error('Failed to delete tweet:', error);
+          
+          // エラーが発生した場合は元の状態に戻す
+          tweetArray = tweetBackup;
+          refreshTweetDisplay(tweetArray);
+          
+          // エラーメッセージを表示
+          showMessage('ツイートの削除に失敗しました');
+        }
       } catch (error) {
-        console.error('Failed to delete tweet:', error);
+        console.error('Error in executeDelete:', error);
+        showMessage('予期せぬエラーが発生しました');
       }
     }
 
@@ -2161,13 +2226,41 @@
     // フォーカス機能の実装
     let focusedTweetIndex = null;
 
-    // ツイートにフォーカスを設定する関数
-    function toggleFocusOnTweet() {
-      const focusedTweet = document.activeElement;
-      console.log('Active element:', focusedTweet);
+    // マインドフック機能の実装
+    let mindHookedTweetIndices = [];
+    const MAX_MIND_HOOKS = 3;
+
+    // 既存のフォーカス状態をクリアする関数
+    function clearExistingFocusStates() {
+      // フォーカスされたツイートからクラスとインジケータを削除
+      const focusedElements = document.querySelectorAll('.tweet.focused');
+      focusedElements.forEach(tweet => {
+        tweet.classList.remove('focused');
+        
+        const focusIndicator = tweet.querySelector('.focus-indicator');
+        if (focusIndicator) {
+          focusIndicator.remove();
+        }
+      });
       
-      if (!focusedTweet || !focusedTweet.classList.contains('tweet') || focusedTweet.classList.contains('child-tweet')) {
-        console.log('No valid tweet to focus');
+      // LocalStorageからフォーカス状態を削除
+      try {
+        localStorage.removeItem('focusedTweetIndex');
+      } catch (e) {
+        console.error('Error removing focus state from localStorage:', e);
+      }
+    }
+
+    // ツイートにマインドフックを設定する関数
+    function toggleMindHookOnTweet() {
+      console.log('toggleMindHookOnTweet called');
+      
+      const focusedTweet = document.activeElement;
+      console.log('Active element for mind hook:', focusedTweet);
+      
+      // 子ツイートも含めて有効なツイートかどうかをチェック
+      if (!focusedTweet || (!focusedTweet.classList.contains('tweet') && !focusedTweet.classList.contains('child-tweet'))) {
+        console.log('No valid tweet to mind hook');
         return;
       }
       
@@ -2178,156 +2271,174 @@
         return;
       }
       
-      console.log('Toggle focus on tweet with index:', actualIndex);
-      console.log('Current focused tweet index:', focusedTweetIndex);
+      console.log('Toggle mind hook on tweet with index:', actualIndex);
+      console.log('Current mind hooked tweet indices:', mindHookedTweetIndices);
       
-      // 現在のフォーカス状態を確認
-      if (focusedTweetIndex === actualIndex) {
-        // 同じツイートがフォーカスされている場合はフォーカスを解除
-        console.log('Removing focus');
-        focusedTweetIndex = null;
+      // 現在のマインドフック状態を確認
+      const mindHookIndex = mindHookedTweetIndices.indexOf(actualIndex);
+      
+      if (mindHookIndex !== -1) {
+        // 既にマインドフックされている場合は解除
+        console.log('Removing mind hook');
+        mindHookedTweetIndices.splice(mindHookIndex, 1);
         
-        // すべてのツイートからフォーカスクラスを削除
-        const focusedElements = document.querySelectorAll('.tweet.focused');
-        console.log('Found focused elements to remove:', focusedElements.length);
+        // ツイートからマインドフッククラスを削除
+        focusedTweet.classList.remove('mind-hooked');
+        console.log('Removed mind-hooked class from tweet');
         
-        focusedElements.forEach(tweet => {
-          tweet.classList.remove('focused');
-          console.log('Removed focused class from tweet');
-          
-          const focusIndicator = tweet.querySelector('.focus-indicator');
-          if (focusIndicator) {
-            focusIndicator.remove();
-            console.log('Removed focus indicator');
-          }
-        });
-        
-        // フォーカス状態を保存
-        try {
-          localStorage.removeItem('focusedTweetIndex');
-          console.log('Focus state removed from localStorage');
-        } catch (e) {
-          console.error('Error removing focus state from localStorage:', e);
+        const mindHookIndicator = focusedTweet.querySelector('.mind-hook-indicator');
+        if (mindHookIndicator) {
+          mindHookIndicator.remove();
+          console.log('Removed mind hook indicator');
         }
+        
+        // マトリックスエフェクトを適用
+        focusedTweet.classList.add('mind-hook-matrix-effect');
+        setTimeout(() => {
+          focusedTweet.classList.remove('mind-hook-matrix-effect');
+        }, 1000);
       } else {
-        // 新しいツイートをフォーカス
-        console.log('Setting new focus');
+        // 新しいマインドフックを追加
+        console.log('Adding new mind hook');
         
-        // 以前のフォーカスを解除
-        const previousFocused = document.querySelectorAll('.tweet.focused');
-        console.log('Found previously focused elements:', previousFocused.length);
-        
-        previousFocused.forEach(tweet => {
-          tweet.classList.remove('focused');
-          console.log('Removed focused class from previous tweet');
+        // 最大数を超える場合は古いものを削除
+        if (mindHookedTweetIndices.length >= MAX_MIND_HOOKS) {
+          const oldestIndex = mindHookedTweetIndices.shift();
+          console.log('Removed oldest mind hook with index:', oldestIndex);
           
-          const focusIndicator = tweet.querySelector('.focus-indicator');
-          if (focusIndicator) {
-            focusIndicator.remove();
-            console.log('Removed previous focus indicator');
+          // 古いマインドフックを持つツイートからクラスとインジケータを削除
+          const oldestTweet = document.querySelector(`.tweet[data-actual-index="${oldestIndex}"]`);
+          if (oldestTweet) {
+            oldestTweet.classList.remove('mind-hooked');
+            
+            const oldIndicator = oldestTweet.querySelector('.mind-hook-indicator');
+            if (oldIndicator) {
+              oldIndicator.remove();
+            }
           }
-        });
+        }
         
-        // 新しいフォーカスを設定
-        focusedTweetIndex = actualIndex;
+        // 新しいマインドフックを追加
+        mindHookedTweetIndices.push(actualIndex);
         
-        // フォーカスクラスを追加
-        focusedTweet.classList.add('focused');
-        console.log('Added focused class to new tweet');
+        // マインドフッククラスを追加
+        focusedTweet.classList.add('mind-hooked');
+        console.log('Added mind-hooked class to tweet');
         
-        // フォーカスインジケータを追加
+        // マインドフックインジケータを追加
         const contentElement = focusedTweet.querySelector('.content');
         if (contentElement) {
-          const focusIndicator = document.createElement('span');
-          focusIndicator.className = 'focus-indicator';
-          focusIndicator.innerHTML = '★';
-          contentElement.insertBefore(focusIndicator, contentElement.firstChild);
-          console.log('Added focus indicator to new tweet');
+          // 既存のインジケータがあれば削除
+          const existingIndicator = contentElement.querySelector('.mind-hook-indicator');
+          if (existingIndicator) {
+            existingIndicator.remove();
+          }
+          
+          const mindHookIndicator = document.createElement('span');
+          mindHookIndicator.className = 'mind-hook-indicator';
+          mindHookIndicator.innerHTML = '💭';
+          contentElement.insertBefore(mindHookIndicator, contentElement.firstChild);
+          console.log('Added mind hook indicator to tweet');
+        }
+        
+        // マトリックスエフェクトを適用
+        focusedTweet.classList.add('mind-hook-matrix-effect');
+        setTimeout(() => {
+          focusedTweet.classList.remove('mind-hook-matrix-effect');
+        }, 1000);
+      }
+      
+      // マインドフック状態を保存
+      try {
+        localStorage.setItem('mindHookedTweetIndices', JSON.stringify(mindHookedTweetIndices));
+        console.log('Mind hook state saved:', mindHookedTweetIndices);
+      } catch (e) {
+        console.error('Error saving mind hook state to localStorage:', e);
+      }
+      
+      // マインドフックカウントを更新
+      updateMindHookCount();
+    }
+
+    // マインドフックカウントを更新する関数
+    function updateMindHookCount() {
+      const countElement = document.querySelector('#mindHookBtn .mind-hook-count');
+      if (countElement) {
+        const count = mindHookedTweetIndices.length;
+        countElement.textContent = count.toString();
+        countElement.style.display = count > 0 ? 'flex' : 'none';
+      }
+    }
+
+    // 保存されたマインドフック状態を復元する関数
+    function restoreMindHookState() {
+      try {
+        const savedIndices = localStorage.getItem('mindHookedTweetIndices');
+        console.log('Restoring mind hook state, saved indices:', savedIndices);
+        
+        if (savedIndices) {
+          mindHookedTweetIndices = JSON.parse(savedIndices);
+          console.log('Parsed mind hook indices:', mindHookedTweetIndices);
+          
+          // 少し遅延させてDOMが完全に読み込まれた後に実行
+          setTimeout(() => {
+            // 各マインドフックを適用
+            mindHookedTweetIndices.forEach(index => {
+              // 親ツイートと子ツイートの両方を検索
+              const tweetToHook = document.querySelector(`.tweet[data-actual-index="${index}"], .child-tweet[data-actual-index="${index}"]`);
+              console.log('Tweet to mind hook:', tweetToHook);
+              
+              if (tweetToHook) {
+                // マインドフッククラスを追加
+                tweetToHook.classList.add('mind-hooked');
+                console.log('Added mind-hooked class to tweet');
+                
+                // マインドフックインジケータを追加
+                const contentElement = tweetToHook.querySelector('.content');
+                if (contentElement) {
+                  // 既存のインジケータがあれば削除
+                  const existingIndicator = contentElement.querySelector('.mind-hook-indicator');
+                  if (existingIndicator) {
+                    existingIndicator.remove();
+                  }
+                  
+                  const mindHookIndicator = document.createElement('span');
+                  mindHookIndicator.className = 'mind-hook-indicator';
+                  mindHookIndicator.innerHTML = '💭';
+                  contentElement.insertBefore(mindHookIndicator, contentElement.firstChild);
+                  console.log('Added mind hook indicator to tweet');
+                }
+              } else {
+                console.log('Tweet to mind hook not found for index:', index);
+                // 無効なインデックスを配列から削除
+                const invalidIndex = mindHookedTweetIndices.indexOf(index);
+                if (invalidIndex !== -1) {
+                  mindHookedTweetIndices.splice(invalidIndex, 1);
+                }
+              }
+            });
+            
+            // マインドフックカウントを更新
+            updateMindHookCount();
+            
+            // 無効なインデックスが削除された場合は保存し直す
+            localStorage.setItem('mindHookedTweetIndices', JSON.stringify(mindHookedTweetIndices));
+          }, 300);
         } else {
-          console.log('Content element not found in tweet');
+          console.log('No mind hooks to restore');
+          mindHookedTweetIndices = [];
         }
-        
-        // フォーカス状態を保存
-        try {
-          localStorage.setItem('focusedTweetIndex', actualIndex.toString());
-          console.log('Focus state saved as:', actualIndex.toString());
-        } catch (e) {
-          console.error('Error saving focus state to localStorage:', e);
-        }
-        
-        // デバッグ情報
-        console.log('After toggle, focused tweet index:', focusedTweetIndex);
-        console.log('Focused elements:', document.querySelectorAll('.tweet.focused').length);
-        console.log('Focus indicators:', document.querySelectorAll('.focus-indicator').length);
+      } catch (e) {
+        console.error('Error restoring mind hook state:', e);
+        mindHookedTweetIndices = [];
       }
     }
 
     // 保存されたフォーカス状態を復元する関数
     function restoreFocusState() {
-      let savedFocusIndex = null;
-      
-      try {
-        savedFocusIndex = localStorage.getItem('focusedTweetIndex');
-        console.log('Restoring focus state, saved index:', savedFocusIndex);
-      } catch (e) {
-        console.error('Error reading focus state from localStorage:', e);
-        return;
-      }
-      
-      if (savedFocusIndex && savedFocusIndex !== 'null') {
-        const parsedIndex = parseInt(savedFocusIndex, 10);
-        if (isNaN(parsedIndex)) {
-          console.log('Invalid saved focus index:', savedFocusIndex);
-          return;
-        }
-        
-        focusedTweetIndex = parsedIndex;
-        console.log('Parsed focus index:', focusedTweetIndex);
-        
-        // 少し遅延させてDOMが完全に読み込まれた後に実行
-        setTimeout(() => {
-          const tweetToFocus = document.querySelector(`.tweet[data-actual-index="${focusedTweetIndex}"]:not(.child-tweet)`);
-          console.log('Tweet to focus:', tweetToFocus);
-          
-          if (tweetToFocus) {
-            // フォーカスクラスを追加
-            tweetToFocus.classList.add('focused');
-            console.log('Added focused class to tweet');
-            
-            // フォーカスインジケータを追加
-            const contentElement = tweetToFocus.querySelector('.content');
-            if (contentElement) {
-              // 既存のインジケータがあれば削除
-              const existingIndicator = contentElement.querySelector('.focus-indicator');
-              if (existingIndicator) {
-                existingIndicator.remove();
-                console.log('Removed existing focus indicator');
-              }
-              
-              const focusIndicator = document.createElement('span');
-              focusIndicator.className = 'focus-indicator';
-              focusIndicator.innerHTML = '★';
-              contentElement.insertBefore(focusIndicator, contentElement.firstChild);
-              console.log('Added focus indicator to tweet content');
-            }
-            
-            console.log('Focus applied to element');
-          } else {
-            console.log('Tweet to focus not found');
-            // ツイートが見つからない場合はフォーカス状態をリセット
-            focusedTweetIndex = null;
-            try {
-              localStorage.removeItem('focusedTweetIndex');
-              console.log('Focus state removed from localStorage (tweet not found)');
-            } catch (e) {
-              console.error('Error removing focus state from localStorage:', e);
-            }
-          }
-        }, 200); // 遅延を200ミリ秒に短縮
-      } else {
-        console.log('No focus to restore');
-        focusedTweetIndex = null;
-      }
+      // フォーカス機能は無効化するため、何もしない
+      console.log('Focus restoration disabled');
+      return;
     }
 
     // イベントリスナーの設定
@@ -2346,24 +2457,116 @@
           }
         }
         
-        // フォーカス機能を実行
-        toggleFocusOnTweet();
+        // フォーカス機能の代わりにマインドフック機能を実行
+        toggleMindHookOnTweet();
+      });
+      
+      // マインドフックボタンのイベントリスナー
+      document.getElementById('mindHookBtn').addEventListener('click', () => {
+        console.log('Mind Hook button clicked');
+        // 現在フォーカスされているツイートがない場合は、最初のツイートにフォーカスを移動
+        const currentFocus = document.activeElement;
+        if (!currentFocus || !currentFocus.classList.contains('tweet') || currentFocus.classList.contains('child-tweet') || currentFocus.classList.contains('new-tweet')) {
+          const firstTweet = document.querySelector('.tweet:not(.child-tweet):not(.new-tweet)');
+          if (firstTweet) {
+            firstTweet.focus();
+          }
+        }
+        
+        // マインドフック機能を実行
+        toggleMindHookOnTweet();
       });
       
       // キーボードショートカットの追加
       document.addEventListener('keydown', (e) => {
         // ... existing code ...
         
-        // フォーカス機能のショートカット (f)
-        if (e.key === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey && !isEditing()) {
-          e.preventDefault();
-          toggleFocusOnTweet();
+        // マインドフック機能のショートカット (f)は、メインのイベントリスナーで処理するため、ここでは削除
+        // if (e.key === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey && !isEditing()) {
+        //   e.preventDefault();
+        //   console.log('Mind hook shortcut triggered');
+        //   
+        //   // 現在フォーカスされているツイートがない場合は、最初のツイートにフォーカスを移動
+        //   const currentFocus = document.activeElement;
+        //   if (!currentFocus || !currentFocus.classList.contains('tweet') || currentFocus.classList.contains('child-tweet') || currentFocus.classList.contains('new-tweet')) {
+        //     const firstTweet = document.querySelector('.tweet:not(.child-tweet):not(.new-tweet)');
+        //     if (firstTweet) {
+        //       firstTweet.focus();
+        //       console.log('Focus moved to first tweet');
+        //     }
+        //   }
+        //   
+        //   // マインドフック機能を実行
+        //   toggleMindHookOnTweet();
+        // }
+        
+        // マインドフックされたツイートへのスクロール (Alt+↑ と Alt+↓)
+        if (e.altKey && !e.ctrlKey && !e.metaKey && !isEditing()) {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            scrollToMindHookedTweet('prev');
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            scrollToMindHookedTweet('next');
+          }
         }
       });
       
-      // 初期表示時にフォーカス状態を復元
-      restoreFocusState();
+      // 初期表示時にマインドフック状態のみを復元（フォーカス状態は復元しない）
+      // restoreFocusState();
+      restoreMindHookState();
     });
+
+    // マインドフックされたツイートへスクロールする関数
+    function scrollToMindHookedTweet(direction = 'next') {
+      if (mindHookedTweetIndices.length === 0) {
+        console.log('No mind hooked tweets to scroll to');
+        return;
+      }
+      
+      // 現在アクティブなツイートのインデックスを取得
+      const activeElement = document.activeElement;
+      let currentIndex = -1;
+      
+      if (activeElement && (activeElement.classList.contains('tweet') || activeElement.classList.contains('child-tweet'))) {
+        const actualIndex = parseInt(activeElement.getAttribute('data-actual-index'));
+        if (!isNaN(actualIndex)) {
+          currentIndex = mindHookedTweetIndices.indexOf(actualIndex);
+        }
+      }
+      
+      // 次または前のマインドフックされたツイートのインデックスを計算
+      let targetIndex;
+      if (direction === 'next') {
+        targetIndex = currentIndex < 0 || currentIndex >= mindHookedTweetIndices.length - 1 ? 0 : currentIndex + 1;
+      } else {
+        targetIndex = currentIndex <= 0 ? mindHookedTweetIndices.length - 1 : currentIndex - 1;
+      }
+      
+      // 対象のツイートを取得してフォーカス
+      const targetTweetIndex = mindHookedTweetIndices[targetIndex];
+      const targetTweet = document.querySelector(`.tweet[data-actual-index="${targetTweetIndex}"], .child-tweet[data-actual-index="${targetTweetIndex}"]`);
+      
+      if (targetTweet) {
+        // スムーズにスクロール
+        targetTweet.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // フォーカスを設定
+        setTimeout(() => {
+          targetTweet.focus();
+          
+          // マトリックスエフェクトを適用
+          targetTweet.classList.add('mind-hook-matrix-effect');
+          setTimeout(() => {
+            targetTweet.classList.remove('mind-hook-matrix-effect');
+          }, 1000);
+        }, 300);
+        
+        console.log(`Scrolled to mind hooked tweet with index: ${targetTweetIndex}`);
+      } else {
+        console.log(`Target mind hooked tweet not found for index: ${targetTweetIndex}`);
+      }
+    }
   </script>
 </body>
 </html>
